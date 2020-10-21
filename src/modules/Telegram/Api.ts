@@ -1,5 +1,5 @@
-import { CError } from "@/commonError";
-import { Logger } from "@/commonLogger";
+import { CError } from "@/common/Error";
+import { Logger } from "@/common/Logger";
 import { MTProto } from "@mtproto/core";
 
 export class Api {
