@@ -38,6 +38,7 @@ export namespace Extractor {
 	export namespace Obtain {
 		export interface Options {
 			metaKey: string;
+			limit: number;
 		}
 		export interface Response {}
 		export interface PendingResponse extends Peding {}
