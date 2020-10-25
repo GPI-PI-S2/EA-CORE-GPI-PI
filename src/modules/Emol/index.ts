@@ -11,13 +11,21 @@ export class Emol extends Extractor {
 		});
 	}
 	async deploy(config: Emol.Deploy.Config, options: Emol.Deploy.Options): Promise<Response> {
+		this.logger.debug('HOLS');
 		return new Response(this, Response.Status.OK);
 	}
 	async obtain(options: Emol.Obtain.Options): Promise<Response> {
 		const { url } = options
 		try {
 			const response = await axios.get(url)
-			this.logger.debug(response)
+			// TODO: NORMALIZAR CORRECTAMENTE LOS COMENTARIOS
+			// *Hay comentarios que son fotos, esos se eliminan
+			const comments: string[] = []
+			response.data.comments.forEach(({ text } : { text:string }) => {
+				const comment:string = text.replace('&nbsp;', '')
+				if(comment !== '  ') comments.push(comment)
+			})
+			return new Response(this, Response.Status.OK, comments)
 		} catch (error) {
 			return new Response(this, Response.Status.ERROR, error)
 		}
@@ -37,8 +45,7 @@ export namespace Emol {
 	}
 	export namespace Obtain {
 		export interface Options extends Extractor.Obtain.Options {
-			url: string,
-			limit: number
+			url: string;
 		}
 		export interface Response extends Extractor.Obtain.Response {}
 	}
