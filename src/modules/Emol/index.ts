@@ -1,5 +1,6 @@
 import { Extractor } from "../Extractor";
 import { Response } from "../Extractor/Response";
+import axios from 'axios'
 
 export class Emol extends Extractor {
 	constructor() {
@@ -13,7 +14,13 @@ export class Emol extends Extractor {
 		return new Response(this, Response.Status.OK);
 	}
 	async obtain(options: Emol.Obtain.Options): Promise<Response> {
-		return new Response(this, Response.Status.OK);
+		const { url } = options
+		try {
+			const response = await axios.get(url)
+			this.logger.debug(response)
+		} catch (error) {
+			return new Response(this, Response.Status.ERROR, error)
+		}
 	}
 	async unitaryObtain(options: Emol.UnitaryObtain.Options): Promise<Response> {
 		return new Response(this, Response.Status.OK);
@@ -29,7 +36,10 @@ export namespace Emol {
 		export interface Response extends Extractor.Deploy.Response {}
 	}
 	export namespace Obtain {
-		export interface Options extends Extractor.Obtain.Options {}
+		export interface Options extends Extractor.Obtain.Options {
+			url: string,
+			limit: number
+		}
 		export interface Response extends Extractor.Obtain.Response {}
 	}
 	export namespace UnitaryObtain {
