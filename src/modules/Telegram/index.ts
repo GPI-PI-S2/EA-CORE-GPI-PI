@@ -21,7 +21,6 @@ export class Telegram extends Extractor {
 					message: sigIn.message,
 					codeHash: sigIn.codeHash,
 				});
-			// Acá
 			return new Response(this, Response.Status.OK);
 		} catch (error) {
 			return new Response(this, Response.Status.ERROR, error);
