@@ -15,7 +15,14 @@ export class File {
 	async read<T extends "string" | "object">(as: T): Promise<T extends "string" ? string : object> {
 		let raw: Buffer;
 		if (this.rawContent) raw = this.rawContent;
-		else raw = await fs.promises.readFile(this.filepath);
+		else {
+			try {
+				raw = await fs.promises.readFile(this.filepath);
+			} catch (error) {
+				await this.write({});
+				raw = await fs.promises.readFile(this.filepath);
+			}
+		}
 		const content = raw.toString();
 		if (as === "string") return content as any;
 		return JSON.parse(content);
