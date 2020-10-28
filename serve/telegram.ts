@@ -1,6 +1,6 @@
 import { extractors } from "../src/";
 import { Logger } from "../src/common/Logger";
-import { vPhone } from "../src/common/validator";
+import { vPhone, vRangeBetween } from "../src/common/validator";
 import { Response } from "../src/modules/Extractor/Response";
 import { Telegram } from "../src/modules/Telegram";
 import { File } from "./File";
@@ -38,7 +38,9 @@ async function login() {
 		const pendingResponse = response.get() as Telegram.Deploy.PendingResponse;
 		codeHash = pendingResponse.codeHash;
 		while (isNaN(code)) {
+			logger.log();
 			const iCode = await Readline.read("Ingrese el código de verificación");
+			logger.log();
 			const intCode = parseInt(iCode);
 			const valid = iCode.length > 4 && !isNaN(intCode);
 			if (!valid) {
@@ -53,10 +55,39 @@ async function login() {
 		}
 		await file.write({ auth, code, codeHash, phone } as content);
 	}
-	return;
+	const content = (await file.read("object")) as content;
+	await file.write({ ...content, ...{ auth, code, codeHash, phone } } as content);
+	return response.get() as Telegram.Deploy.Response;
+}
+async function selectChat(chats: Telegram.Deploy.chat[]) {
+	logger.log("\nChats\n");
+	chats.forEach((chat, index) => logger.log(` [${index + 1}]  (${chat.type}) - ${chat.name}`));
+	const min = 1;
+	const max = chats.length;
+	let selected = "";
+	while (!selected) {
+		logger.log();
+		const userResponse = await Readline.read("Seleccione el n° del chat");
+		logger.log();
+		const valid = vRangeBetween(min, max)(userResponse);
+		if (typeof valid === "boolean") selected = userResponse;
+		else logger.error(valid);
+	}
+	return chats[Number(selected) - 1];
 }
 async function main() {
-	await login();
+	const loginResponse = await login();
+	const selectedChat = await selectChat(loginResponse.chats);
+	const { accessHash, id, type } = selectedChat;
+	await telegramE.obtain({
+		accessHash,
+		type,
+		chatId: id,
+		limit: 50,
+		metaKey: JSON.stringify(selectedChat),
+		minSentenceSize: 2,
+		minWordSize: 4,
+	});
 	process.exit(0);
 }
 try {

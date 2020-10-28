@@ -14,11 +14,11 @@ export abstract class Extractor {
 		config: Extractor.Deploy.Config,
 		options: Extractor.Deploy.Options,
 	): Promise<Response<Extractor.Deploy.Response>>;
-	abstract async obtain(config: Extractor.Obtain.Options): Promise<Response>;
+	abstract async obtain(config: Extractor.Obtain.Options): Promise<Response<unknown>>;
 	abstract async unitaryObtain(
 		config: Extractor.UnitaryObtain.Options,
 	): Promise<Response<Extractor.UnitaryObtain.Response>>;
-	abstract async destroy(config: Extractor.Destroy.Options): Promise<Response>;
+	abstract async destroy(config: Extractor.Destroy.Options): Promise<Response<unknown>>;
 }
 export namespace Extractor {
 	export interface Register {
@@ -39,6 +39,8 @@ export namespace Extractor {
 		export interface Options {
 			metaKey: string;
 			limit: number;
+			minWordSize: number;
+			minSentenceSize: number;
 		}
 		export interface Response {}
 		export interface PendingResponse extends Peding {}
