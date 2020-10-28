@@ -27,13 +27,12 @@ export class Analyzer {
 		const assurance = 0.3;
 		const content: string = input ? input.content : null;
 		if (!empty && !content) return false;
-		if (content.split(" ").length < minSentenceSize) return false;
 		const lngDetector = new LanguageDetect();
 		lngDetector.setLanguageType("iso2");
 		const result = lngDetector.detect(content);
 		const langResult = result.some((prob) => prob[0] == lang && prob[1] >= assurance);
 		if (!langResult) return false;
-		return true;
+		return;
 	}
 	constructor(private readonly extractor: Extractor) {}
 	async analyze(input: Analyzer.input[]): Promise<Analyzer.Analysis> {

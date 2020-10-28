@@ -86,7 +86,6 @@ async function main() {
 		limit: 50,
 		metaKey: JSON.stringify(selectedChat),
 		minSentenceSize: 2,
-		minWordSize: 4,
 	});
 	process.exit(0);
 }
