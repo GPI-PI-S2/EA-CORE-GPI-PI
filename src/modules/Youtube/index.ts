@@ -15,7 +15,7 @@ export class Youtube extends Extractor {
 			version: "0.0.0",
 		});
 	}
-	async deploy(config: Youtube.Deploy.Config, options: Youtube.Deploy.Options): Promise<Response> {
+	async deploy(config: Youtube.Deploy.Config, options: Youtube.Deploy.Options): Promise<Response<unknown>> {
 		/*
         // Se crea instancia de axios con el endpoint de la api
 		// https://github.com/axios/axios#axios-api
@@ -30,7 +30,7 @@ export class Youtube extends Extractor {
         */
 		return new Response(this, Response.Status.OK);
 	}
-	async obtain(options: Youtube.Obtain.Options): Promise<Response> {
+	async obtain(options: Youtube.Obtain.Options): Promise<Response<unknown>> {
 		/*
         const analyzer = new Analyzer(this);
 		// request del tipo post
@@ -44,10 +44,10 @@ export class Youtube extends Extractor {
         */
 		return new Response(this, Response.Status.OK);
 	}
-	async unitaryObtain(options: Youtube.UnitaryObtain.Options): Promise<Response> {
+	async unitaryObtain(options: Youtube.UnitaryObtain.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
-	async destroy(options: Youtube.Destroy.Options): Promise<Response> {
+	async destroy(options: Youtube.Destroy.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
 }

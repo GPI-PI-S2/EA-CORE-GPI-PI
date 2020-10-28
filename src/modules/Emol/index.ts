@@ -12,7 +12,7 @@ export class Emol extends Extractor {
 			version: "0.0.0",
 		});
 	}
-	async deploy(config: Emol.Deploy.Config, options: Emol.Deploy.Options): Promise<Response> {
+	async deploy(config: Emol.Deploy.Config, options: Emol.Deploy.Options): Promise<Response<unknown>> {
 		// Se crea instancia de axios con el endpoint de la api
 		// https://github.com/axios/axios#axios-api
 		this.api = Axios.create({
@@ -25,7 +25,7 @@ export class Emol extends Extractor {
 		});
 		return new Response(this, Response.Status.OK);
 	}
-	async obtain(options: Emol.Obtain.Options): Promise<Response> {
+	async obtain(options: Emol.Obtain.Options): Promise<Response<unknown>> {
 		const analyzer = new Analyzer(this);
 		// request del tipo post
 		const response = await this.api.post<{ messages: string[] }>("/api/TEST", {
@@ -36,10 +36,10 @@ export class Emol extends Extractor {
 		const analysis = await analyzer.analyze(message);
 		return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 	}
-	async unitaryObtain(options: Emol.UnitaryObtain.Options): Promise<Response> {
+	async unitaryObtain(options: Emol.UnitaryObtain.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
-	async destroy(options: Emol.Destroy.Options): Promise<Response> {
+	async destroy(options: Emol.Destroy.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
 }

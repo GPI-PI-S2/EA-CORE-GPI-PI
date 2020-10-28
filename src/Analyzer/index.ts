@@ -1,5 +1,5 @@
 import { Extractor } from "@/modules/Extractor";
-
+import LanguageDetect from "languagedetect";
 export class Analyzer {
 	private static newResult(): Analyzer.sentiments {
 		return {
@@ -21,6 +21,19 @@ export class Analyzer {
 			Optimismo: 0,
 			Violencia: 0,
 		};
+	}
+	static filter(input: Analyzer.input, filters: Partial<Analyzer.Filter> = {}): boolean {
+		const { empty, lang, minSentenceSize } = { ...{ empty: false, lang: "es", minSentenceSize: 2 }, ...filters };
+		const assurance = 0.3;
+		const content: string = input ? input.content : null;
+		if (!empty && !content) return false;
+		if (content.split(" ").length < minSentenceSize) return false;
+		const lngDetector = new LanguageDetect();
+		lngDetector.setLanguageType("iso2");
+		const result = lngDetector.detect(content);
+		const langResult = result.some((prob) => prob[0] == lang && prob[1] >= assurance);
+		if (!langResult) return false;
+		return true;
 	}
 	constructor(private readonly extractor: Extractor) {}
 	async analyze(input: Analyzer.input[]): Promise<Analyzer.Analysis> {
@@ -59,6 +72,11 @@ export namespace Analyzer {
 	export type input = {
 		content: string;
 	};
+	export interface Filter {
+		empty: boolean;
+		minSentenceSize: number;
+		lang: "es";
+	}
 	export interface Analysis {
 		extractor: string;
 		result: {
