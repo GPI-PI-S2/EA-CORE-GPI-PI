@@ -32,6 +32,7 @@ export class Twitter extends Extractor {
 		return new Response(this, Response.Status.OK);
 	}
 	async obtain(options: Twitter.Obtain.Options): Promise<Response<unknown>> {
+		const { limit, metaKey, minSentenceSize } = options;
 		/*
 		const analyzer = new Analyzer(this);
 		// request del tipo post
