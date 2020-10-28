@@ -1,5 +1,5 @@
-import { CError } from "@/commonError";
-import { Logger } from "@/commonLogger";
+import { CError } from "@/common/Error";
+import { Logger } from "@/common/Logger";
 import { MTProto } from "@mtproto/core";
 
 export class Api {
@@ -78,8 +78,42 @@ export class Api {
 				throw new CError("Error al intentar generar el código", apiError);
 		}
 	}
+	async getDialogs(limit: number) {
+		try {
+			this.logger.debug("Obteniendo dialogos");
+			const response = (await this.client.call("messages.getDialogs", {
+				limit,
+				offset_peer: { _: "inputPeerEmpty" },
+			})) as Api.GetDialogs.Response;
+			this.logger.debug("Dialogos obtenidos", response);
+			return response;
+		} catch (error) {
+			const apiError: Api.Error = error;
+			throw new CError("Error al intentar obtener los chats", apiError);
+		}
+	}
+	async getHistory(options: Api.GetHistory.Options): Promise<Api.GetHistory.Response> {
+		try {
+			const { limit, max_id, peer } = options;
+			this.logger.debug("Obteniendo mensajes");
+			const response = await this.client.call("messages.getHistory", {
+				peer,
+				limit,
+				max_id,
+			});
+			return response as any;
+		} catch (error) {
+			const apiError: Api.Error = error;
+			throw new CError("Error al intentar obtener los mensajes", apiError);
+		}
+	}
 }
 export namespace Api {
+	type conversation<peer extends string> = {
+		_: peer;
+		id: number;
+		access_hash: string;
+	};
 	export type errorMessage =
 		| "PHONE_CODE_EXPIRED"
 		| "PHONE_CODE_INVALID"
@@ -87,6 +121,52 @@ export namespace Api {
 		| "PHONE_NUMBER_UNOCCUPIED"
 		| "SESSION_PASSWORD_NEEDED"
 		| string;
+	export type user = conversation<"user"> & {
+		self: boolean;
+		username?: string;
+		first_name?: string;
+		last_name?: string;
+		deleted?: true;
+		restricted?: true;
+		support?: true;
+		bot?: true;
+		phone?: string;
+	};
+	export type channel = conversation<"channel"> & {
+		title: string;
+		username?: string;
+		participants_count?: number;
+		restricted?: true;
+		left?: boolean;
+	};
+	export type chat = conversation<"chat"> & {
+		title: string;
+		kicked?: true;
+		deactivated?: true;
+		left?: boolean;
+		participants_count?: number;
+	};
+	export type peerChat = {
+		_: "inputPeerChat";
+		chat_id: number;
+	};
+	export type peerUser = {
+		_: "inputPeerUser";
+		user_id: number;
+		access_hash: string;
+	};
+	export type peerChannel = {
+		_: "inputPeerChannel";
+		channel_id: number;
+		access_hash: string;
+	};
+	export type message = {
+		_: "message";
+		id: number;
+		from_id: number;
+		to_id: number;
+		message: string;
+	};
 	export interface Config {
 		apiId: number;
 		apiHash: string;
@@ -99,6 +179,24 @@ export namespace Api {
 	export namespace SendCode {
 		export interface Response {
 			phone_code_hash: string;
+		}
+	}
+	export namespace GetDialogs {
+		export interface Response {
+			_: "messages.dialogsSlice";
+			count: number;
+			chats: (chat | channel)[];
+			users: user[];
+		}
+	}
+	export namespace GetHistory {
+		export interface Options {
+			peer: peerChannel | peerChat | peerUser;
+			limit: number;
+			max_id: number;
+		}
+		export interface Response {
+			messages: message[];
 		}
 	}
 	export namespace NearestDC {
