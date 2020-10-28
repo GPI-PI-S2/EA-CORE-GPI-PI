@@ -1,11 +1,17 @@
+import { Analyzer } from "@/Analyzer";
+import { AxiosInstance, default as Axios } from "axios";
 import { Extractor } from "../Extractor";
 import { Response } from "../Extractor/Response";
-import axios from 'axios'
 
 export class Emol extends Extractor {
-	/*
-    private api: AxiosInstance; // En caso de instanciar desde deploy remover readonly
-    */
+	static baseParams = {
+		action: "getComments",
+		rootComment: false,
+		order: "TIME",
+		format: "json",
+		includePending: false,
+	};
+	private api: AxiosInstance;
 	constructor() {
 		super({
 			id: "emol-extractor", // Identificador, solo letras minúsculas y guiones (az-)
@@ -13,69 +19,115 @@ export class Emol extends Extractor {
 			version: "0.0.0",
 		});
 	}
-	async deploy(config: Emol.Deploy.Config, options: Emol.Deploy.Options): Promise<Response> {
-		/*
-		// Se crea instancia de axios con el endpoint de la api
+	async deploy(config: Emol.Deploy.Config = {}, options: Emol.Deploy.Options = {}): Promise<Response<unknown>> {
+		this.logger.debug("DEPLOY", { config, options });
 		// https://github.com/axios/axios#axios-api
 		this.api = Axios.create({
-			baseURL: "https://api.test", // Base URL,
+			baseURL: "https://cache-comentarios.ecn.cl/Comments/Api",
 			responseType: "json",
-			headers: {
-				// Se añade la api key en el header
-				"api-key": config.apiKey,
-			},
-        });
-        */
-		return new Response(this, Response.Status.OK);
-	}
-	async obtain(options: Emol.Obtain.Options): Promise<Response> {
-		/*
-		const analyzer = new Analyzer(this);
-		// request del tipo post
-		const response = await this.api.post<{ messages: string[] }>("/api/TEST", {
-			postParam: 123,
-			postParam2: "asd",
+			params: Emol.baseParams,
 		});
-		const message: Analyzer.input[] = response.data.messages.map((content) => ({ content }));
-		const analysis = await analyzer.analyze(message);
-        return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
-        */
-	   const { url } = options
-	   try {
-		   const response = await axios.get(url)
-		   // TODO: NORMALIZAR CORRECTAMENTE LOS COMENTARIOS
-		   // *Hay comentarios que son fotos, esos se eliminan
-		   const comments: string[] = []
-		   response.data.comments.forEach(({ text } : { text:string }) => {
-			   const comment:string = text.replace('&nbsp;', '')
-			   if(comment !== '  ') comments.push(comment)
-		   })
-		   return new Response(this, Response.Status.OK, comments)
-	   } catch (error) {
-		   return new Response(this, Response.Status.ERROR, error)
-	   }
-	}
-	async unitaryObtain(options: Emol.UnitaryObtain.Options): Promise<Response> {
+
 		return new Response(this, Response.Status.OK);
 	}
-	async destroy(options: Emol.Destroy.Options): Promise<Response> {
+	async obtain(options: Emol.Obtain.Options): Promise<Response<unknown>> {
+		this.logger.debug("OBTAIN", { options });
+		const { metaKey: url, limit, minSentenceSize } = options;
+		const analyzer = new Analyzer(this);
+		try {
+			/*
+			 * Tener encuenta que limit para emol son solamente los comentarios padres
+			 * Las respuestas a estos igual se considerarán (las que empiezan
+			 * con referencia al autor del comentario padre).
+			 * Por lo que la cantidad de comentarios a obtener será potencialmente superior
+			 * al límite deseado,
+			 * considerar.
+			 */
+			const response = (await this.api.get("", {
+				params: {
+					url,
+					limit,
+				},
+			})) as Emol.Api.Response;
+			const comments: Analyzer.input[] = response.data.comments
+				.filter((comment) => comment.text !== "  ")
+				.map((comment) => {
+					/**
+					 * TODO: NORMALIZAR CORRECTAMENTE LOS COMENTARIOS
+					 * *Hay comentarios que son fotos, esos se eliminan
+					 * Actualmente elimina las referencias a usuarios y &nbsp
+					 * pero faltan los tags html entre otros (Ojo que reemplazarlos todos por ""
+					 * puede resultar en palabras juntas del tipo HolaComoEstas).
+					 * Recomiendo intentar con expresiones regulares,
+					 * en esta página se pueden testear https://regex101.com/
+					 */
+					const pComment = comment.text.replace(/(@.*\[\d*\]( )?)|&nbsp;*/g, "");
+					return { content: pComment };
+				});
+			this.logger.log(comments);
+			// Hay que normalizar lo más posible los comentarios o no pasarán el filtro del Analyzer
+			const filtered = comments.filter((comment) => Analyzer.filter(comment, { minSentenceSize }));
+			const analysis = await analyzer.analyze(filtered);
+			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
+		} catch (error) {
+			return new Response(this, Response.Status.ERROR, error);
+		}
+	}
+	async unitaryObtain(options: Emol.UnitaryObtain.Options): Promise<Response<unknown>> {
+		return new Response(this, Response.Status.OK);
+	}
+	async destroy(options: Emol.Destroy.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
 }
 export namespace Emol {
-	export namespace Deploy {
-		export interface Config extends Extractor.Deploy.Config {
-			/*
-            apiKey: string;
-            */
+	export namespace Api {
+		export interface Comment {
+			id: number;
+			creator: string;
+			presence: string;
+			promotedCreator: boolean;
+			disabledCreator: boolean;
+			creatorId: number;
+			parentId: number;
+			banned: boolean;
+			authSource: string;
+			validated: boolean;
+			location: string;
+			text: string;
+			likes: number;
+			dislikes: number;
+			denounces: number;
+			time: number;
+			status: string;
+			boost: number;
+			highlight: boolean;
+			level: number;
+			pageSection: string;
+			anchor: string;
+			pageCmsId: number;
 		}
+		export interface Data {
+			time: number;
+			commentsCounter: number;
+			userBusiness: boolean;
+			userValidated: boolean;
+			userPromoted: boolean;
+			userTotalFollowers: number;
+			userTotalFollowing: number;
+			comments: Comment[];
+		}
+		export interface Response {
+			data: Data;
+		}
+	}
+	export namespace Deploy {
+		export interface Config extends Extractor.Deploy.Config {}
 		export interface Options extends Extractor.Deploy.Options {}
 		export interface Response extends Extractor.Deploy.Response {}
 	}
 	export namespace Obtain {
-		export interface Options extends Extractor.Obtain.Options {
-			url: string;
-		}
+		export interface Options extends Extractor.Obtain.Options {}
 		export interface Response extends Extractor.Obtain.Response {}
 	}
 	export namespace UnitaryObtain {

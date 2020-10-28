@@ -23,7 +23,8 @@
 	},
 	"dependencies": {
 		"@mtproto/core": "5.0.0",
-		"axios": "^0.20.0"
+		"axios": "^0.20.0",
+		"languagedetect": "^2.0.0"
 	},
 	"_moduleAliases": {
 		"@/": "./src/"

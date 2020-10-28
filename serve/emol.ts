@@ -1,31 +1,30 @@
 import { extractors } from "../src/";
 import { Logger } from "../src/common/Logger";
-import { Emol } from "../src/modules/Emol";
 import { vUrl } from "../src/common/validator";
+import { Emol } from "../src/modules/Emol";
+import { Response } from "../src/modules/Extractor/Response";
 import { Readline } from "./Readline";
 const logger = new Logger("emol-test");
 const emolE: Emol = extractors.find((e) => e.register.id === "emol-extractor") as any;
-
-const apiUrl = 'https://cache-comentarios.ecn.cl/Comments/Api?action=getComments&includePending=false&format=json&limit=10&order=TIME_DESC&rootComment=false&url='
-
-async function getCommentaries() {
-	let url: string
-	while(!url) {
-		const newUrl = await Readline.read('Ingrese URL de la noticia')
-		const isValid = vUrl()(newUrl)
-		if(typeof isValid === 'boolean') {
-			url = encodeURIComponent(newUrl)
+async function getURL() {
+	let url: string =
+		"https://www.emol.com/noticias/Economia/2020/10/27/1001985/Comision-Constitucion-segundo-retiro-10.html";
+	while (!url) {
+		const newUrl = await Readline.read("Ingrese URL de la noticia");
+		const isValid = vUrl()(newUrl);
+		if (typeof isValid === "boolean") {
+			url = encodeURIComponent(newUrl);
 		} else {
-			logger.error(isValid)
+			logger.error(isValid);
 		}
 	}
-	const comments = await emolE.obtain({ url: `${apiUrl}${url}`, limit: 1, metaKey: 'aaa' })
-	return comments
+	return url;
 }
-
 async function main() {
-	const comments = await getCommentaries()
-	logger.log(comments)
+	emolE.deploy();
+	const url = await getURL();
+	const analysis = await emolE.obtain({ limit: 1, metaKey: url });
+	if (analysis && analysis.status === Response.Status.ERROR) throw new Error(analysis as any);
 	return process.exit(0);
 }
 try {
