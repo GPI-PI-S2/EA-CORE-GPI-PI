@@ -94,11 +94,12 @@ export class Telegram extends Extractor {
 	}
 	async obtain(options: Telegram.Obtain.Options): Promise<Response<unknown>> {
 		this.logger.debug("OBTAIN", { options });
+		const { minSentenceSize } = options;
 		const peer = Telegram.parsePeer(options);
 		const response = await this.api.getHistory({ peer, limit: options.limit, max_id: 0 });
 		const lastId: number = response.messages.length > 0 ? response.messages[0].id : null;
 		const RMessages: Analyzer.input[] = response.messages.map((m) => ({ content: m.message }));
-		const filteredMessages = RMessages.filter((message) => Analyzer.filter(message));
+		const filteredMessages = RMessages.filter((message) => Analyzer.filter(message, { minSentenceSize }));
 		this.logger.log(filteredMessages);
 		return new Response(this, Response.Status.OK);
 	}

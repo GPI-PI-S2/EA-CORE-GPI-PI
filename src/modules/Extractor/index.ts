@@ -39,7 +39,6 @@ export namespace Extractor {
 		export interface Options {
 			metaKey: string;
 			limit: number;
-			minWordSize: number;
 			minSentenceSize: number;
 		}
 		export interface Response {}
