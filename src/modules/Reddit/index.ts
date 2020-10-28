@@ -9,16 +9,16 @@ export class Reddit extends Extractor {
 			version: "0.0.0",
 		});
 	}
-	async deploy(config: Reddit.Deploy.Config, options: Reddit.Deploy.Options): Promise<Response> {
+	async deploy(config: Reddit.Deploy.Config, options: Reddit.Deploy.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
-	async obtain(options: Reddit.Obtain.Options): Promise<Response> {
+	async obtain(options: Reddit.Obtain.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
-	async unitaryObtain(options: Reddit.UnitaryObtain.Options): Promise<Response> {
+	async unitaryObtain(options: Reddit.UnitaryObtain.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
-	async destroy(options: Reddit.Destroy.Options): Promise<Response> {
+	async destroy(options: Reddit.Destroy.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
 }

@@ -16,7 +16,7 @@ export class Twitter extends Extractor {
 			version: "0.0.0",
 		});
 	}
-	async deploy(config: Twitter.Deploy.Config, options: Twitter.Deploy.Options): Promise<Response> {
+	async deploy(config: Twitter.Deploy.Config, options: Twitter.Deploy.Options): Promise<Response<unknown>> {
 		/*
 		// Se crea instancia de axios con el endpoint de la api
 		// https://github.com/axios/axios#axios-api
@@ -31,7 +31,7 @@ export class Twitter extends Extractor {
         */
 		return new Response(this, Response.Status.OK);
 	}
-	async obtain(options: Twitter.Obtain.Options): Promise<Response> {
+	async obtain(options: Twitter.Obtain.Options): Promise<Response<unknown>> {
 		/*
 		const analyzer = new Analyzer(this);
 		// request del tipo post
@@ -45,10 +45,10 @@ export class Twitter extends Extractor {
         */
 		return new Response(this, Response.Status.OK);
 	}
-	async unitaryObtain(options: Twitter.UnitaryObtain.Options): Promise<Response> {
+	async unitaryObtain(options: Twitter.UnitaryObtain.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
-	async destroy(options: Twitter.Destroy.Options): Promise<Response> {
+	async destroy(options: Twitter.Destroy.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
 }
