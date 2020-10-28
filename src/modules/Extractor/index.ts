@@ -39,7 +39,7 @@ export namespace Extractor {
 		export interface Options {
 			metaKey: string;
 			limit: number;
-			minSentenceSize: number;
+			minSentenceSize?: number;
 		}
 		export interface Response {}
 		export interface PendingResponse extends Peding {}
