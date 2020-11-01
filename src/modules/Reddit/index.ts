@@ -9,8 +9,6 @@ const flattenCommentsTree = (nodo: any): string[] => {
 		return nodo.data.children.flatMap((children: any) => flattenCommentsTree(children));
 	}
 	if (nodo.kind === "t1") {
-		console.log(nodo.data.body);
-		console.log(nodo.data.replies);
 		if (nodo.data.replies.kind === "Listing") {
 			let rest = flattenCommentsTree(nodo.data.replies);
 			rest.unshift(nodo.data.body as string);
@@ -50,7 +48,6 @@ export class Reddit extends Extractor {
 		const analysis = await analyzer.analyze(message);
 		return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 
-		//return new Response(this, Response.Status.OK);
 	}
 	async unitaryObtain(options: Reddit.UnitaryObtain.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
