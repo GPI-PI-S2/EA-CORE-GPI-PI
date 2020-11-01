@@ -32,7 +32,7 @@ export class Analyzer {
 		const result = lngDetector.detect(content);
 		const langResult = result.some((prob) => prob[0] == lang && prob[1] >= assurance);
 		if (!langResult) return false;
-		return;
+		return true;
 	}
 	constructor(private readonly extractor: Extractor) {}
 	async analyze(input: Analyzer.input[]): Promise<Analyzer.Analysis> {

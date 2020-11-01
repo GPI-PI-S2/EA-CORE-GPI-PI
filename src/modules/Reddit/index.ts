@@ -36,17 +36,25 @@ export class Reddit extends Extractor {
 		return new Response(this, Response.Status.OK);
 	}
 	async obtain(options: Reddit.Obtain.Options): Promise<Response<unknown>> {
-		const {limit, metaKey, minSentenceSize, subReddit, postId} = options;
+		const {limit, minSentenceSize, subReddit, postId} = options;
 		this.logger.log("Obtaining: SubReddit: ", subReddit, "Post Id: ", postId);
-		const response = await this.api.get(`${subReddit}/comments/${postId}.json`);
-		this.logger.log("Request status: ", response.status);
-		const comments = flattenCommentsTree(response.data[1]);
+		try {
+			const response = await this.api.get(`${subReddit}/comments/${postId}.json`, {params: {limit: limit}});
+			this.logger.log("Request status: ", response.status);
+			const comments = flattenCommentsTree(response.data[1]);
 
-		this.logger.log("Comments read: ", comments.length);
-		const analyzer = new Analyzer(this);
-		const message: Analyzer.input[] = comments.map(content => ({content}));
-		const analysis = await analyzer.analyze(message);
-		return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
+			this.logger.log("Comments read: ", comments.length);
+			const analyzer = new Analyzer(this);
+			const messages: Analyzer.input[] = comments.map(content => ({content}));
+			const filteredMessages = messages.filter(message => Analyzer.filter(message, {minSentenceSize}));
+			this.logger.log("Valid messages: ", filteredMessages.length);
+			const analysis = await analyzer.analyze(filteredMessages);
+			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
+		}
+		catch (error) {
+			this.logger.error(error.response);
+			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR);
+		}
 
 	}
 	async unitaryObtain(options: Reddit.UnitaryObtain.Options): Promise<Response<unknown>> {
