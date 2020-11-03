@@ -1,6 +1,6 @@
 import { Extractor } from ".";
 
-export class Response<Data extends object = {}> {
+export class Response<Data extends unknown> {
 	readonly status: Response.Status;
 	constructor(private extractor: Extractor, status: Response.Status, private data: Data = null) {
 		this.status = status;

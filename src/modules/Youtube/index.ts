@@ -13,7 +13,10 @@ export class Youtube extends Extractor {
 			version: "0.0.0",
 		});
 	}
-	async deploy(config: Youtube.Deploy.Config, options: Youtube.Deploy.Options): Promise<Response> {
+	async deploy(config: Youtube.Deploy.Config, options: Youtube.Deploy.Options): Promise<Response<unknown>> {
+		
+        // Se crea instancia de axios con el endpoint de la api
+		// https://github.com/axios/axios#axios-api
 		this.api = Axios.create({
 			baseURL: "https://www.googleapis.com/youtube/v3/", // Base URL,
 			responseType: "json",
@@ -24,7 +27,7 @@ export class Youtube extends Extractor {
 		});
 		return new Response(this, Response.Status.OK);
 	}
-	async obtain(options: Youtube.Obtain.Options): Promise<Response> {
+	async obtain(options: Youtube.Obtain.Options): Promise<Response<unknown>> {
 
 		let comments: { content: any; }[] = [];
 		const analyzer = new Analyzer(this);
@@ -52,7 +55,7 @@ export class Youtube extends Extractor {
 		const analysis = await analyzer.analyze(message);
 		return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 	}
-	async unitaryObtain(options: Youtube.UnitaryObtain.Options): Promise<Response> {
+	async unitaryObtain(options: Youtube.UnitaryObtain.Options): Promise<Response<unknown>> {
 
 		let comments = []
 		const analyzer = new Analyzer(this);
@@ -92,7 +95,7 @@ export class Youtube extends Extractor {
 		this.logger.log(message)
 		return new Response(this, Response.Status.OK);
 	}
-	async destroy(options: Youtube.Destroy.Options): Promise<Response> {
+	async destroy(options: Youtube.Destroy.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
 }
