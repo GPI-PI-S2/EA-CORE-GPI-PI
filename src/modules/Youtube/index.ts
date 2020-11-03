@@ -18,62 +18,78 @@ export class Youtube extends Extractor {
 			baseURL: "https://www.googleapis.com/youtube/v3/", // Base URL,
 			responseType: "json",
 			headers: {
-				// Se añade la api key en el header
-				"api-key": config.apiKey,
+				// // Se añade la api key en el header
+				// "api-key": config.apiKey,
 			},
 		});
 		return new Response(this, Response.Status.OK);
 	}
 	async obtain(options: Youtube.Obtain.Options): Promise<Response> {
 
-		// let tokenPage = "";
-		// while (tokenPage){
-			
-		// // obtiene toda la info de un video con el ID y una apikey 
-		// 	axios.get(`https://www.googleapis.com/youtube/v3/commentThreads?key=${options.apiKey}&textFormat=plainText&part=snippet&videoId=${options.videoID}&pageToken=${tokenPage}`)
-		// 	.then((res: any)=>{
-		// 		// +20 results?
-		// 		tokenPage = res.data.nextPageToken
-		// 		res.data.items.map((comment) => options.comments.push(comment.snippet.topLevelComment.snippet.textOriginal))
-		// 		// +20
-		// 	})
-		// 	.catch(err => {
-		// 		this.logger.error(err)
-		// 	})
-		// }
-
-        // Se crea instancia de axios con el endpoint de la api
-		// https://github.com/axios/axios#axios-api
-
-        const analyzer = new Analyzer(this);
-		const response = await this.api.get<{ ytData: JSON }>("/commentThreads", {params: {
-			key: options.apiKey,
-			videoId: options.metaKey,
-			part: options.part
-		}});
-		if (options.part=='snippet'){
-			const message: Analyzer.input[] = response.data.ytData.items.map((comment : JSON) => ({ content: comment.snippet.topLevelComment.snippet.textOriginal}));
-		} // else if (options=='snippet,replies'){
-			//
-		//}
+		let comments: { content: any; }[] = [];
+		const analyzer = new Analyzer(this);
+		/*
+		    Repeticiones para mas comentarios
+		*/
+		let tokenPage = ''
+		while (tokenPage!=undefined){
+			let response = await this.api.get('commentThreads', {params:{
+				key: options.apiKey,
+				videoId:options.metaKey,
+				part: 'Snippet',
+				pageToken: tokenPage,
+				maxResults: 100
+			}})
+			response.data.items.map((comment :any ) => {comments.push({content: comment['snippet'].topLevelComment.snippet.textOriginal})})
+			tokenPage = response.data['nextPageToken']
+			this.logger.log(`Comentarios actualmente escaneados: ${comments.length}`)
+			if (comments.length>options.limit){
+				break;
+			}
+		}
+		const message: Analyzer.input[] = comments.map((eachComment) => ({content: eachComment.content}));
+		this.logger.log(message)
 		const analysis = await analyzer.analyze(message);
-
 		return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 	}
 	async unitaryObtain(options: Youtube.UnitaryObtain.Options): Promise<Response> {
 
-		//get a comment by id 
-		// axios.get(`https://www.googleapis.com/youtube/v3/comments?part=snippet&id={COMMENT_ID}&textFormat=html&key=${options.}`)
-		// https://www.googleapis.com/youtube/v3/comments?part=snippet&id={COMMENT_ID}&textFormat=html&key={YOUR_API_KEY} 
+		let comments = []
 		const analyzer = new Analyzer(this);
-
-		const response = await this.api.get<{ ytData: JSON }>("/comments", {params: {
+		const response = await this.api.get("comments", {params: {
 			key: options.apiKey,
 			id: options.metaKey,  // commentId
-			part: options.part,
+			part: 'snippet'
 		}});
-		
+		let tokenPage = ''
+		const commentOriginal = {
+			content: response.data.items[0]['snippet'].textOriginal,
+		}
+		comments.push(commentOriginal)
+
+		// has replies? 
+		if (options.limitComment!=undefined){
+			while (tokenPage!=undefined){
+				let response2 = await this.api.get('comments',{params: {
+					key: options.apiKey,
+					parentId: options.metaKey,
+					part: 'snippet',
+					maxResults: 100,
+					pageToken: tokenPage
+				}});
+				tokenPage = response.data['nextPageToken'];
+				response2.data.items.map((comment: any) => comments.push({content: comment['snippet'].textOriginal}))
+				this.logger.log(response2.data.items[0]['snippet'].textOriginal)
+				this.logger.log(`Respuestas actualmente escaneadas: ${comments.length}`)
+				if (comments.length>options.limitComment){
+					break;
+				}
+			}
+		}
+		/* Parseando los datos a la estructura del analyzer */
+		const message: Analyzer.input[] = comments.map((eachComment) => ({content: eachComment.content}));
 		const analysis = await analyzer.analyze(message)
+		this.logger.log(message)
 		return new Response(this, Response.Status.OK);
 	}
 	async destroy(options: Youtube.Destroy.Options): Promise<Response> {
@@ -91,16 +107,13 @@ export namespace Youtube {
 	export namespace Obtain {
 		export interface Options extends Extractor.Obtain.Options {
 			apiKey: string;
-			comments: [String];
-			// snippet para top level comentario, "snippet,replies" para top level comentarios y respuestas de los comentarios
-			part: String;
 		}
 		export interface Response extends Extractor.Obtain.Response {}
 	}
 	export namespace UnitaryObtain {
 		export interface Options extends Extractor.UnitaryObtain.Options {
-			apiKey: string;
-			part: String;
+			apiKey: string,
+			limitComment: Number;
 		}
 		export interface Response extends Extractor.UnitaryObtain.Response {}
 	}
