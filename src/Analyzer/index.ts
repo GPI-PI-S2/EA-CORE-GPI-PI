@@ -42,7 +42,9 @@ export class Analyzer {
 			.replace(/\n\n/g, '\n')
 			.replace(/&#x200B;/g, '')
 			.replace(/\n\n/g, '\n')
-			.replace(/\n/g, ' ');
+			.replace(/\n/g, ' ')
+			.replace(/,,/g, ',')
+			.replace(/,,/g, ',');
 
 		return { content };
 	}

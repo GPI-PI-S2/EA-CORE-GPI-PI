@@ -9,8 +9,8 @@
 		"build": "tsc -p ./tsconfig.json",
 		"serve-telegram": "cross-env LEVEL=silly EXTRACTOR=telegram-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
 		"serve-reddit": "cross-env LEVEL=silly EXTRACTOR=reddit-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
+		"serve-emol": "cross-env LEVEL=silly EXTRACTOR=emol-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
 		"serve-twitter": "tsnd --respawn -r tsconfig-paths/register ./serve/twitter.ts",
-		"serve-emol": "tsnd --respawn -r tsconfig-paths/register ./serve/emol.ts",
 		"serve-youtube": "tsnd --respawn -r tsconfig-paths/register ./serve/youtube.ts"
 	},
 	"author": "DEV TEAM (PI-GPI-02-2020)",

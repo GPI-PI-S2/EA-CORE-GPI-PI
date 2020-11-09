@@ -1,10 +1,11 @@
 import { Analyzer } from '@/Analyzer';
 import { AxiosInstance, default as Axios } from 'axios';
-import { Inject, Service } from 'typedi';
+import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
 import { Extractor } from '../Extractor';
 import { Response } from '../Extractor/Response';
-@Service()
+
+@injectable()
 export class Emol extends Extractor {
 	static baseParams = {
 		action: 'getComments',
@@ -14,7 +15,7 @@ export class Emol extends Extractor {
 		includePending: false,
 	};
 	private api: AxiosInstance;
-	constructor(@Inject('logger') private logger: Logger) {
+	constructor(@inject('logger') private logger: Logger) {
 		super({
 			id: 'emol-extractor', // Identificador, solo letras minúsculas y guiones (az-)
 			name: 'Emol', // Nombre legible para humanos
@@ -25,7 +26,7 @@ export class Emol extends Extractor {
 		config: Emol.Deploy.Config = {},
 		options: Emol.Deploy.Options = {},
 	): Promise<Response<unknown>> {
-		this.logger.debug('DEPLOY', { config, options });
+		this.logger.verbose('DEPLOY', { config, options });
 		// https://github.com/axios/axios#axios-api
 		this.api = Axios.create({
 			baseURL: 'https://cache-comentarios.ecn.cl/Comments/Api',
@@ -36,18 +37,10 @@ export class Emol extends Extractor {
 		return new Response(this, Response.Status.OK);
 	}
 	async obtain(options: Emol.Obtain.Options): Promise<Response<unknown>> {
-		this.logger.debug('OBTAIN', { options });
+		this.logger.verbose('OBTAIN', { options });
 		const { metaKey: url, limit, minSentenceSize } = options;
 		const analyzer = new Analyzer(this);
 		try {
-			/*
-			 * Tener encuenta que limit para emol son solamente los comentarios padres
-			 * Las respuestas a estos igual se considerarán (las que empiezan
-			 * con referencia al autor del comentario padre).
-			 * Por lo que la cantidad de comentarios a obtener será potencialmente superior
-			 * al límite deseado,
-			 * considerar.
-			 */
 			const response = (await this.api.get('', {
 				params: {
 					url,
@@ -55,26 +48,19 @@ export class Emol extends Extractor {
 				},
 			})) as Emol.Api.Response;
 			const comments: Analyzer.input[] = response.data.comments
-				.filter((comment) => comment.text !== '  ')
+				.filter((comment, index) => index < limit && comment.text !== '  ')
 				.map((comment) => {
-					/**
-					 * TODO: NORMALIZAR CORRECTAMENTE LOS COMENTARIOS
-					 * *Hay comentarios que son fotos, esos se eliminan
-					 * Actualmente elimina las referencias a usuarios y &nbsp
-					 * pero faltan los tags html entre otros (Ojo que reemplazarlos todos por ""
-					 * puede resultar en palabras juntas del tipo HolaComoEstas).
-					 * Recomiendo intentar con expresiones regulares,
-					 * en esta página se pueden testear https://regex101.com/
-					 */
 					const pComment = comment.text.replace(/(@.*\[\d*\]( )?)|&nbsp;*/g, '');
 					return { content: pComment };
 				});
-			this.logger.silly(comments);
 			// Hay que normalizar lo más posible los comentarios o no pasarán el filtro del Analyzer
-			const filtered = comments.filter((comment) =>
-				Analyzer.filter(comment, { minSentenceSize }),
-			);
-			const analysis = await analyzer.analyze(filtered);
+			const filtered = comments
+				.map((comment) => Analyzer.htmlParse(comment))
+				.filter((comment) => Analyzer.filter(comment, { minSentenceSize, assurance: 0.2 }));
+
+			this.logger.silly('filtered:', filtered);
+			this.logger.silly('length:', filtered.length);
+			const analysis = await analyzer.analyze(filtered, { metaKey: url });
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
 			return new Response(this, Response.Status.ERROR, error);

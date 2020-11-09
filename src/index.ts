@@ -1,4 +1,5 @@
 import { container } from 'tsyringe';
+import { Emol } from './services/Emol';
 import { Extractor } from './services/Extractor';
 import { Reddit } from './services/Reddit';
 import { Telegram } from './services/Telegram';
@@ -9,6 +10,7 @@ export const extractors: Extractor[] = [
 	//Container.get(Emol),
 	container.resolve(Telegram),
 	container.resolve(Reddit),
+	container.resolve(Emol),
 	new Twitter(),
 	new Youtube(),
 ];
