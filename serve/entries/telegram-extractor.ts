@@ -55,7 +55,7 @@ async function login(extractor: Telegram) {
 }
 async function selectChat(chats: Telegram.Deploy.chat[]) {
 	logger.info('\nChats\n');
-	chats.forEach((chat, index) => logger.info(` [${index + 1}]  (${chat.type}) - ${chat.name}`));
+	chats.forEach((chat, index) => console.log(` [${index + 1}]  (${chat.type}) - ${chat.name}`));
 	const min = 1;
 	const max = chats.length;
 	let selected = '';
@@ -68,27 +68,20 @@ async function selectChat(chats: Telegram.Deploy.chat[]) {
 	return chats[Number(selected) - 1];
 }
 export default async (extractor: Telegram) => {
+	logger.info(`Serving extractor`);
+	logger.info(`name:      ${extractor.register.name}`);
+	logger.info(`version:   ${extractor.register.version}`);
 	const loginResponse = await login(extractor);
 	const selectedChat = await selectChat(loginResponse.chats);
 	const { accessHash, id, type } = selectedChat;
-	await extractor.obtain({
+	const result = (await extractor.obtain({
 		accessHash,
 		type,
 		chatId: id,
-		limit: 50,
+		limit: 1000,
 		metaKey: JSON.stringify(selectedChat),
 		minSentenceSize: 2,
-	});
-
-	/* const loginResponse = await login(extractor);
-	const selectedChat = await selectChat(loginResponse.chats);
-	const { accessHash, id, type } = selectedChat;
-	await extractor.obtain({
-		accessHash,
-		type,
-		chatId: id,
-		limit: 50,
-		metaKey: JSON.stringify(selectedChat),
-		minSentenceSize: 2,
-	});*/
+	})) as Response<Telegram.Obtain.Response>;
+	logger.info('response ok');
+	logger.debug('result get:', result.get());
 };

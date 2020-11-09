@@ -8,7 +8,7 @@ export const extractors: Extractor[] = [
 	//Container.get(Telegram),
 	//Container.get(Emol),
 	container.resolve(Telegram),
-	new Reddit(),
+	container.resolve(Reddit),
 	new Twitter(),
 	new Youtube(),
 ];

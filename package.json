@@ -8,7 +8,7 @@
 		"build-common": "cd ./src/common && npm install && npm run build",
 		"build": "tsc -p ./tsconfig.json",
 		"serve-telegram": "cross-env LEVEL=silly EXTRACTOR=telegram-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
-		"serve-reddit": "tsnd --respawn -r tsconfig-paths/register ./serve/reddit.ts",
+		"serve-reddit": "cross-env LEVEL=silly EXTRACTOR=reddit-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
 		"serve-twitter": "tsnd --respawn -r tsconfig-paths/register ./serve/twitter.ts",
 		"serve-emol": "tsnd --respawn -r tsconfig-paths/register ./serve/emol.ts",
 		"serve-youtube": "tsnd --respawn -r tsconfig-paths/register ./serve/youtube.ts"
@@ -17,6 +17,7 @@
 	"license": "ISC",
 	"devDependencies": {
 		"@types/axios": "^0.14.0",
+		"@types/html-to-text": "^5.1.2",
 		"@types/jsdom": "^16.2.5",
 		"@types/node": "^14.14.6",
 		"@types/prismjs": "^1.16.2",
@@ -37,6 +38,7 @@
 		"@mtproto/core": "5.1.0",
 		"axios": "^0.21.0",
 		"ea-common-gpi-pi": "github:GPI-PI-S2/EA-COMMON-GPI-PI#main",
+		"html-to-text": "^6.0.0",
 		"languagedetect": "^2.0.0",
 		"reflect-metadata": "^0.1.13",
 		"tsyringe": "^4.3.0",

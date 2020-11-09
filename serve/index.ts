@@ -4,7 +4,7 @@ import logger from './loaders/logger';
 async function main(extractor: string) {
 	await (await import('./loaders')).default();
 	const { extractors } = await import('../src');
-	const fExtractor = extractors.find((e) => e.register.id === 'telegram-extractor');
+	const fExtractor = extractors.find((e) => e.register.id === extractor);
 	await (await import(`./entries/${extractor}`)).default(fExtractor);
 	return process.exit(0);
 }

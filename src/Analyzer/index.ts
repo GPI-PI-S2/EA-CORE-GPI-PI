@@ -1,5 +1,7 @@
 import { Extractor } from '@/services/Extractor';
+import { fromString } from 'html-to-text';
 import LanguageDetect from 'languagedetect';
+
 export class Analyzer {
 	private static newResult(): Analyzer.sentiments {
 		return {
@@ -22,12 +24,33 @@ export class Analyzer {
 			Violencia: 0,
 		};
 	}
+	static htmlParse(input: Analyzer.input): Analyzer.input {
+		let content: string = input ? input.content : null;
+		if (!content) return { content };
+		content = content.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+		content = fromString(content, {
+			ignoreHref: true,
+			ignoreImage: true,
+			noLinkBrackets: true,
+		});
+		content = content
+			.replace(/&quot;/g, '"')
+			.replace(/\n\n/g, '\n')
+			.replace(/> /g, '')
+			.replace(/\n\n/g, '\n')
+			.replace(/&#39;/g, '')
+			.replace(/\n\n/g, '\n')
+			.replace(/&#x200B;/g, '')
+			.replace(/\n\n/g, '\n')
+			.replace(/\n/g, ' ');
+
+		return { content };
+	}
 	static filter(input: Analyzer.input, filters: Partial<Analyzer.Filter> = {}): boolean {
-		const { empty, lang, minSentenceSize } = {
-			...{ empty: false, lang: 'es', minSentenceSize: 2 },
+		const { empty, lang, minSentenceSize, assurance } = {
+			...{ empty: false, lang: 'es', minSentenceSize: 2, assurance: 0.3 },
 			...filters,
 		};
-		const assurance = 0.3;
 		const content: string = input ? input.content : null;
 		if (!empty && !content) return false;
 		if (content.split(' ').length < minSentenceSize) return false;
@@ -38,7 +61,11 @@ export class Analyzer {
 		return langResult;
 	}
 	constructor(private readonly extractor: Extractor) {}
-	async analyze(input: Analyzer.input[]): Promise<Analyzer.Analysis> {
+	async analyze(
+		input: Analyzer.input[],
+		options: Analyzer.Analyze.Options,
+	): Promise<Analyzer.Analysis> {
+		const { metaKey } = options;
 		const extractor = this.extractor.register.id;
 		const result = input.map((input) => ({
 			input,
@@ -46,6 +73,7 @@ export class Analyzer {
 		}));
 		return {
 			extractor,
+			metaKey,
 			result,
 		};
 	}
@@ -78,12 +106,19 @@ export namespace Analyzer {
 		empty: boolean;
 		minSentenceSize: number;
 		lang: 'es';
+		assurance: number;
 	}
 	export interface Analysis {
 		extractor: string;
+		metaKey: string;
 		result: {
 			input: input;
 			sentiments: sentiments;
 		}[];
+	}
+	export namespace Analyze {
+		export interface Options {
+			metaKey: string;
+		}
 	}
 }

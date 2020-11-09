@@ -129,7 +129,7 @@ export class Telegram extends Extractor {
 	}
 	async obtain(options: Telegram.Obtain.Options): Promise<Response<unknown>> {
 		this.logger.verbose('OBTAIN', { options });
-		const { minSentenceSize } = options;
+		const { minSentenceSize, metaKey } = options;
 		const peer = Telegram.parsePeer(options);
 		const response = await this.api.getHistory({ peer, limit: options.limit, max_id: 0 });
 		//const lastId: number = response.messages.length > 0 ? response.messages[0].id : null;
@@ -138,7 +138,9 @@ export class Telegram extends Extractor {
 			Analyzer.filter(message, { minSentenceSize }),
 		);
 		this.logger.silly('mensajes', filteredMessages);
-		return new Response(this, Response.Status.OK);
+		const analyzer = new Analyzer(this);
+		const analysis = await analyzer.analyze(filteredMessages, { metaKey });
+		return new Response(this, Response.Status.OK, analysis);
 	}
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async unitaryObtain(_options: Telegram.UnitaryObtain.Options): Promise<Response<unknown>> {
