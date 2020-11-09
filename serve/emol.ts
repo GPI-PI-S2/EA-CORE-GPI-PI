@@ -1,18 +1,18 @@
-import { extractors } from "../src/";
-import { Logger } from "../src/common/Logger";
-import { vUrl } from "../src/common/validator";
-import { Emol } from "../src/modules/Emol";
-import { Response } from "../src/modules/Extractor/Response";
-import { Readline } from "./Readline";
-const logger = new Logger("emol-test");
-const emolE: Emol = extractors.find((e) => e.register.id === "emol-extractor") as any;
+import { extractors } from '../src/';
+import { Logger } from '../src/common/Logger';
+import { vUrl } from '../src/common/validator';
+import { Emol } from '../src/modules/Emol';
+import { Response } from '../src/modules/Extractor/Response';
+import { Readline } from './Readline';
+const logger = new Logger('emol-test');
+const emolE: Emol = extractors.find((e) => e.register.id === 'emol-extractor') as any;
 async function getURL() {
 	let url: string =
-		"https://www.emol.com/noticias/Economia/2020/10/27/1001985/Comision-Constitucion-segundo-retiro-10.html";
+		'https://www.emol.com/noticias/Economia/2020/10/27/1001985/Comision-Constitucion-segundo-retiro-10.html';
 	while (!url) {
-		const newUrl = await Readline.read("Ingrese URL de la noticia");
+		const newUrl = await Readline.read('Ingrese URL de la noticia');
 		const isValid = vUrl()(newUrl);
-		if (typeof isValid === "boolean") {
+		if (typeof isValid === 'boolean') {
 			url = encodeURIComponent(newUrl);
 		} else {
 			logger.error(isValid);
@@ -30,6 +30,6 @@ async function main() {
 try {
 	main();
 } catch (error) {
-	logger.error("[MAIN ERROR]", error);
+	logger.error('[MAIN ERROR]\n%o', error);
 	process.exit(1);
 }

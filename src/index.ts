@@ -1,8 +1,14 @@
-import { Emol } from "./modules/Emol";
-import { Extractor } from "./modules/Extractor";
-import { Reddit } from "./modules/Reddit";
-import { Telegram } from "./modules/Telegram";
-import { Twitter } from "./modules/Twitter";
-import { Youtube } from "./modules/Youtube";
-
-export const extractors: Extractor[] = [new Telegram(), new Emol(), new Reddit(), new Twitter(), new Youtube()];
+import { container } from 'tsyringe';
+import { Extractor } from './services/Extractor';
+import { Reddit } from './services/Reddit';
+import { Telegram } from './services/Telegram';
+import { Twitter } from './services/Twitter';
+import { Youtube } from './services/Youtube';
+export const extractors: Extractor[] = [
+	//Container.get(Telegram),
+	//Container.get(Emol),
+	container.resolve(Telegram),
+	new Reddit(),
+	new Twitter(),
+	new Youtube(),
+];

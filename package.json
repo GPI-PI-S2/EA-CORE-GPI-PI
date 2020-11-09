@@ -5,8 +5,9 @@
 	"main": "dist/index.js",
 	"description": "Extracte contenido de diferentes fuentes y analiza según el modelo <nombre>",
 	"scripts": {
+		"build-common": "cd ./src/common && npm install && npm run build",
 		"build": "tsc -p ./tsconfig.json",
-		"serve-telegram": "tsnd --respawn -r tsconfig-paths/register ./serve/telegram.ts",
+		"serve-telegram": "cross-env LEVEL=silly EXTRACTOR=telegram-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
 		"serve-reddit": "tsnd --respawn -r tsconfig-paths/register ./serve/reddit.ts",
 		"serve-twitter": "tsnd --respawn -r tsconfig-paths/register ./serve/twitter.ts",
 		"serve-emol": "tsnd --respawn -r tsconfig-paths/register ./serve/emol.ts",
@@ -16,15 +17,30 @@
 	"license": "ISC",
 	"devDependencies": {
 		"@types/axios": "^0.14.0",
-		"@types/node": "^14.11.10",
+		"@types/jsdom": "^16.2.5",
+		"@types/node": "^14.14.6",
+		"@types/prismjs": "^1.16.2",
+		"@typescript-eslint/eslint-plugin": "^4.6.1",
+		"@typescript-eslint/parser": "^4.6.1",
+		"chalk": "^4.1.0",
+		"cross-env": "^7.0.2",
+		"eslint": "^7.13.0",
+		"eslint-config-prettier": "^6.15.0",
+		"eslint-plugin-prettier": "^3.1.4",
+		"jsdom": "^16.4.0",
+		"prismjs": "^1.22.0",
 		"ts-node-dev": "^1.0.0",
 		"tsconfig-paths": "^3.9.0",
-		"typescript": "^4.0.3"
+		"typescript": "^4.0.5"
 	},
 	"dependencies": {
-		"@mtproto/core": "5.0.0",
-		"axios": "^0.20.0",
-		"languagedetect": "^2.0.0"
+		"@mtproto/core": "5.1.0",
+		"axios": "^0.21.0",
+		"ea-common-gpi-pi": "github:GPI-PI-S2/EA-COMMON-GPI-PI#main",
+		"languagedetect": "^2.0.0",
+		"reflect-metadata": "^0.1.13",
+		"tsyringe": "^4.3.0",
+		"winston": "^3.3.3"
 	},
 	"_moduleAliases": {
 		"@/": "./src/"

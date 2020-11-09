@@ -1,15 +1,18 @@
-import { Extractor } from "../Extractor";
-import { Response } from "../Extractor/Response";
+import { Extractor } from '../Extractor';
+import { Response } from '../Extractor/Response';
 
 export class Template extends Extractor {
 	constructor() {
 		super({
-			id: "template-extractor", // Identificador, solo letras minúsculas y guiones (az-)
-			name: "Template", // Nombre legible para humanos
-			version: "0.0.0",
+			id: 'template-extractor', // Identificador, solo letras minúsculas y guiones (az-)
+			name: 'Template', // Nombre legible para humanos
+			version: '0.0.0',
 		});
 	}
-	async deploy(config: Template.Deploy.Config, options: Template.Deploy.Options): Promise<Response<unknown>> {
+	async deploy(
+		config: Template.Deploy.Config,
+		options: Template.Deploy.Options,
+	): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
 	async obtain(options: Template.Obtain.Options): Promise<Response<unknown>> {

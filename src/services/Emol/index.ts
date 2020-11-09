@@ -1,37 +1,42 @@
-import { Analyzer } from "@/Analyzer";
-import { AxiosInstance, default as Axios } from "axios";
-import { Extractor } from "../Extractor";
-import { Response } from "../Extractor/Response";
-
+import { Analyzer } from '@/Analyzer';
+import { AxiosInstance, default as Axios } from 'axios';
+import { Inject, Service } from 'typedi';
+import { Logger } from 'winston';
+import { Extractor } from '../Extractor';
+import { Response } from '../Extractor/Response';
+@Service()
 export class Emol extends Extractor {
 	static baseParams = {
-		action: "getComments",
+		action: 'getComments',
 		rootComment: false,
-		order: "TIME",
-		format: "json",
+		order: 'TIME',
+		format: 'json',
 		includePending: false,
 	};
 	private api: AxiosInstance;
-	constructor() {
+	constructor(@Inject('logger') private logger: Logger) {
 		super({
-			id: "emol-extractor", // Identificador, solo letras minúsculas y guiones (az-)
-			name: "Emol", // Nombre legible para humanos
-			version: "0.0.0",
+			id: 'emol-extractor', // Identificador, solo letras minúsculas y guiones (az-)
+			name: 'Emol', // Nombre legible para humanos
+			version: '0.0.0',
 		});
 	}
-	async deploy(config: Emol.Deploy.Config = {}, options: Emol.Deploy.Options = {}): Promise<Response<unknown>> {
-		this.logger.debug("DEPLOY", { config, options });
+	async deploy(
+		config: Emol.Deploy.Config = {},
+		options: Emol.Deploy.Options = {},
+	): Promise<Response<unknown>> {
+		this.logger.debug('DEPLOY', { config, options });
 		// https://github.com/axios/axios#axios-api
 		this.api = Axios.create({
-			baseURL: "https://cache-comentarios.ecn.cl/Comments/Api",
-			responseType: "json",
+			baseURL: 'https://cache-comentarios.ecn.cl/Comments/Api',
+			responseType: 'json',
 			params: Emol.baseParams,
 		});
 
 		return new Response(this, Response.Status.OK);
 	}
 	async obtain(options: Emol.Obtain.Options): Promise<Response<unknown>> {
-		this.logger.debug("OBTAIN", { options });
+		this.logger.debug('OBTAIN', { options });
 		const { metaKey: url, limit, minSentenceSize } = options;
 		const analyzer = new Analyzer(this);
 		try {
@@ -43,14 +48,14 @@ export class Emol extends Extractor {
 			 * al límite deseado,
 			 * considerar.
 			 */
-			const response = (await this.api.get("", {
+			const response = (await this.api.get('', {
 				params: {
 					url,
 					limit,
 				},
 			})) as Emol.Api.Response;
 			const comments: Analyzer.input[] = response.data.comments
-				.filter((comment) => comment.text !== "  ")
+				.filter((comment) => comment.text !== '  ')
 				.map((comment) => {
 					/**
 					 * TODO: NORMALIZAR CORRECTAMENTE LOS COMENTARIOS
@@ -61,22 +66,26 @@ export class Emol extends Extractor {
 					 * Recomiendo intentar con expresiones regulares,
 					 * en esta página se pueden testear https://regex101.com/
 					 */
-					const pComment = comment.text.replace(/(@.*\[\d*\]( )?)|&nbsp;*/g, "");
+					const pComment = comment.text.replace(/(@.*\[\d*\]( )?)|&nbsp;*/g, '');
 					return { content: pComment };
 				});
-			this.logger.log(comments);
+			this.logger.silly(comments);
 			// Hay que normalizar lo más posible los comentarios o no pasarán el filtro del Analyzer
-			const filtered = comments.filter((comment) => Analyzer.filter(comment, { minSentenceSize }));
+			const filtered = comments.filter((comment) =>
+				Analyzer.filter(comment, { minSentenceSize }),
+			);
 			const analysis = await analyzer.analyze(filtered);
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
 			return new Response(this, Response.Status.ERROR, error);
 		}
 	}
-	async unitaryObtain(options: Emol.UnitaryObtain.Options): Promise<Response<unknown>> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async unitaryObtain(_options: Emol.UnitaryObtain.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
-	async destroy(options: Emol.Destroy.Options): Promise<Response<unknown>> {
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async destroy(_options: Emol.Destroy.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
 }
