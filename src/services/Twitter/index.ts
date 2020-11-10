@@ -1,8 +1,8 @@
-import { Analyzer } from '@/Analyzer';
 import Axios, { AxiosInstance } from 'axios';
 import { inject, injectable } from 'tsyringe';
 import tweetParser from 'tweet-parser';
 import { Logger } from 'winston';
+import { Analyzer } from '../../Analyzer';
 import { Extractor } from '../Extractor';
 import { Response } from '../Extractor/Response';
 

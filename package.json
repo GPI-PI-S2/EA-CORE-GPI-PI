@@ -1,21 +1,29 @@
 {
 	"name": "ea-core-gpi-pi",
-	"version": "0.0.0",
+	"version": "1.0.0",
 	"types": "dist/index.d.ts",
 	"main": "dist/index.js",
 	"description": "Extracte contenido de diferentes fuentes y analiza según el modelo <nombre>",
 	"scripts": {
+		"postinstall": "tsc --project ./",
 		"build": "tsc -p ./tsconfig.json",
 		"lint": "eslint . --ext .ts",
-		"serve-telegram": "cross-env LEVEL=silly EXTRACTOR=telegram-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
-		"serve-reddit": "cross-env LEVEL=silly EXTRACTOR=reddit-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
-		"serve-emol": "cross-env LEVEL=silly EXTRACTOR=emol-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
-		"serve-youtube": "cross-env LEVEL=silly EXTRACTOR=youtube-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
-		"serve-twitter": "cross-env LEVEL=silly EXTRACTOR=twitter-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
-		"git-clear-repo": "git branch --merged | grep -v '\\*\\|master\\|dev' | xargs -n 1 git branch -d",
+		"serve-telegram": "npm run lint && cross-env LEVEL=silly EXTRACTOR=telegram-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
+		"serve-reddit": "npm run lint && cross-env LEVEL=silly EXTRACTOR=reddit-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
+		"serve-emol": "npm run lint && cross-env LEVEL=silly EXTRACTOR=emol-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
+		"serve-youtube": "npm run lint && cross-env LEVEL=silly EXTRACTOR=youtube-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
+		"serve-twitter": "npm run lint && cross-env LEVEL=silly EXTRACTOR=twitter-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
 		"git-update-local": "git remote update origin --prune"
 	},
 	"author": "DEV TEAM (PI-GPI-02-2020)",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/GPI-PI-S2/EA-CORE-GPI-PI.git"
+	},
+	"bugs": {
+		"url": "https://github.com/GPI-PI-S2/EA-CORE-GPI-PI/issues"
+	},
+	"homepage": "https://github.com/GPI-PI-S2/EA-CORE-GPI-PI#readme",
 	"license": "ISC",
 	"devDependencies": {
 		"@types/axios": "^0.14.0",
@@ -46,8 +54,5 @@
 		"tsyringe": "^4.3.0",
 		"tweet-parser": "^0.2.0",
 		"winston": "^3.3.3"
-	},
-	"_moduleAliases": {
-		"@/": "./src/"
 	}
 }

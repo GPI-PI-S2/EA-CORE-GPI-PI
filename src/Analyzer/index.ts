@@ -1,6 +1,6 @@
-import { Extractor } from '@/services/Extractor';
 import { fromString } from 'html-to-text';
 import LanguageDetect from 'languagedetect';
+import { Extractor } from '../services/Extractor';
 
 export class Analyzer {
 	private static newResult(): Analyzer.sentiments {

@@ -17,6 +17,6 @@ export default async (extractor: Twitter) => {
 	const result = (await extractor.obtain({ limit, metaKey: hashtag })) as Response<
 		Twitter.Obtain.Response
 	>;
-	/* logger.info('response ok');
-	logger.debug('result get:', result.get()); */
+	logger.info('response ok');
+	logger.debug('result get:', result.get());
 };

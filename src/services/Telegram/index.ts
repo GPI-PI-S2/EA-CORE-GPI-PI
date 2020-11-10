@@ -1,7 +1,7 @@
-import { Analyzer } from '@/Analyzer';
 import { CError } from 'ea-common-gpi-pi';
 import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
+import { Analyzer } from '../../Analyzer';
 import { Extractor } from '../Extractor';
 import { Response } from '../Extractor/Response';
 import { Api } from './Api';
