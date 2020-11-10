@@ -56,22 +56,27 @@ export class Reddit extends Extractor {
 		const metaKey = JSON.stringify({ subReddit, postId });
 		this.logger.verbose('OBTAIN', { ...options, ...{ metaKey } });
 		try {
-			const response = await this.api.get(`${subRedditParam}/comments/${postId}.json`, {
-				params: { limit: limit, threaded: false },
-			});
+			const response = await this.api.get<Reddit.Data>(
+				`${subRedditParam}/comments/${postId}.json`,
+				{
+					params: { limit: limit, threaded: false },
+				},
+			);
 			this.logger.debug('Request status: ', { status: response.status });
-			const data: Reddit.Data = response.data;
+			const data = response.data;
 			const comments = this.getComments(data[1], 0, limit, []);
-			const filteredMessages = comments
+			const filtered = comments
 				.map((message) => Analyzer.htmlParse(message))
 				.filter((message) =>
 					Analyzer.filter(message, { minSentenceSize, assurance: 0.26 }),
 				);
+			this.logger.silly('filtered:', filtered);
+			this.logger.silly('length:', filtered.length);
 			const analyzer = new Analyzer(this);
-			const analysis = await analyzer.analyze(filteredMessages, { metaKey });
+			const analysis = await analyzer.analyze(filtered, { metaKey });
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
-			this.logger.error('Obtain error', error);
+			this.logger.debug('OBTAIN error', error);
 			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR);
 		}
 	}

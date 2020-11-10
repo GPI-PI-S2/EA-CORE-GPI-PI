@@ -12,5 +12,5 @@ export const extractors: Extractor[] = [
 	container.resolve(Reddit),
 	container.resolve(Emol),
 	new Twitter(),
-	new Youtube(),
+	container.resolve(Youtube),
 ];

@@ -63,6 +63,7 @@ export class Emol extends Extractor {
 			const analysis = await analyzer.analyze(filtered, { metaKey: url });
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
+			this.logger.silly('OBTAIN error', error);
 			return new Response(this, Response.Status.ERROR, error);
 		}
 	}

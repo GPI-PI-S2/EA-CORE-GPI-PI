@@ -5,13 +5,12 @@
 	"main": "dist/index.js",
 	"description": "Extracte contenido de diferentes fuentes y analiza según el modelo <nombre>",
 	"scripts": {
-		"build-common": "cd ./src/common && npm install && npm run build",
 		"build": "tsc -p ./tsconfig.json",
 		"serve-telegram": "cross-env LEVEL=silly EXTRACTOR=telegram-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
 		"serve-reddit": "cross-env LEVEL=silly EXTRACTOR=reddit-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
 		"serve-emol": "cross-env LEVEL=silly EXTRACTOR=emol-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
-		"serve-twitter": "tsnd --respawn -r tsconfig-paths/register ./serve/twitter.ts",
-		"serve-youtube": "tsnd --respawn -r tsconfig-paths/register ./serve/youtube.ts"
+		"serve-youtube": "cross-env LEVEL=silly EXTRACTOR=youtube-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
+		"serve-twitter": "tsnd --respawn -r tsconfig-paths/register ./serve/twitter.ts"
 	},
 	"author": "DEV TEAM (PI-GPI-02-2020)",
 	"license": "ISC",

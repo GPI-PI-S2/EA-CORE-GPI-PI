@@ -48,7 +48,7 @@ export class Api {
 			return { status: true, message: 'ok' };
 		} catch (error) {
 			const apiError: Api.Error = error;
-			this.logger.error('sigIn error', error);
+			this.logger.debug('sigIn error', error);
 			switch (apiError.error_message) {
 				case 'PHONE_CODE_EXPIRED':
 					throw new CError('Código de verificación expirado');

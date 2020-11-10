@@ -27,7 +27,7 @@ async function login(extractor: Telegram) {
 		const iPhone = await Readline.read('Ingrese un número de teléfono');
 		const valid = vPhone()(iPhone);
 		if (typeof valid === 'boolean') phone = iPhone;
-		else logger.error('login error', { valid });
+		else logger.debug('Error: login error', { valid });
 	}
 	let response = await extractor.deploy(config, { phone });
 	if (response.status === Response.Status.PENDING) {
@@ -38,7 +38,7 @@ async function login(extractor: Telegram) {
 			const intCode = parseInt(iCode);
 			const valid = iCode.length > 4 && !isNaN(intCode);
 			if (!valid) {
-				logger.error('Código inválido');
+				logger.debug('Error: Código inválido');
 				continue;
 			}
 			code = intCode;
@@ -63,7 +63,7 @@ async function selectChat(chats: Telegram.Deploy.chat[]) {
 		const userResponse = await Readline.read('Seleccione el n° del chat');
 		const valid = vRangeBetween(min, max)(userResponse);
 		if (typeof valid === 'boolean') selected = userResponse;
-		else logger.error('selectChat', { valid });
+		else logger.debug('Error: selectChat', { valid });
 	}
 	return chats[Number(selected) - 1];
 }

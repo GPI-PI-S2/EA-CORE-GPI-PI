@@ -1,6 +1,6 @@
 import { config, createLogger, format, transports } from 'winston';
 import prismjs from './prismjs';
-const { combine, json, splat, timestamp, cli, errors, colorize, printf, label } = format;
+const { combine, json, splat, cli, printf } = format;
 
 const myFormat = printf(({ level, message, timestamp, ...metadata }) => {
 	let msg = `${level}: ${message} `;
