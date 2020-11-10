@@ -42,7 +42,7 @@
 	"dependencies": {
 		"@mtproto/core": "5.1.0",
 		"axios": "^0.21.0",
-		"ea-common-gpi-pi": "github:GPI-PI-S2/EA-COMMON-GPI-PI#main",
+		"ea-common-gpi-pi": "github:GPI-PI-S2/EA-COMMON-GPI-PI",
 		"html-to-text": "^6.0.0",
 		"languagedetect": "^2.0.0",
 		"reflect-metadata": "^0.1.13",
