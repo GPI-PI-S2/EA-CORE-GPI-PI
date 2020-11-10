@@ -1,13 +1,9 @@
-import { Logger } from "@/common/Logger";
-import { Response } from "./Response";
+import { Response } from './Response';
 
 export abstract class Extractor {
-	static readonly version = "0.0.0";
-	protected logger: Logger;
-	constructor(private _register: Extractor.Register) {
-		this.logger = new Logger(_register.id);
-	}
-	get register() {
+	static readonly version = '0.0.0';
+	constructor(private _register: Extractor.Register) {}
+	get register(): Extractor.Register & { extractorVersion: string } {
 		return { ...this._register, extractorVersion: Extractor.version };
 	}
 	abstract async deploy(

@@ -1,32 +1,58 @@
 {
 	"name": "ea-core-gpi-pi",
-	"version": "0.0.0",
+	"version": "1.0.0",
 	"types": "dist/index.d.ts",
 	"main": "dist/index.js",
 	"description": "Extracte contenido de diferentes fuentes y analiza según el modelo <nombre>",
 	"scripts": {
+		"postinstall": "tsc --project ./",
 		"build": "tsc -p ./tsconfig.json",
-		"serve-telegram": "tsnd --respawn -r tsconfig-paths/register ./serve/telegram.ts",
-		"serve-reddit": "tsnd --respawn -r tsconfig-paths/register ./serve/reddit.ts",
-		"serve-twitter": "tsnd --respawn -r tsconfig-paths/register ./serve/twitter.ts",
-		"serve-emol": "tsnd --respawn -r tsconfig-paths/register ./serve/emol.ts",
-		"serve-youtube": "tsnd --respawn -r tsconfig-paths/register ./serve/youtube.ts"
+		"lint": "eslint . --ext .ts",
+		"serve-telegram": "npm run lint && cross-env LEVEL=silly EXTRACTOR=telegram-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
+		"serve-reddit": "npm run lint && cross-env LEVEL=silly EXTRACTOR=reddit-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
+		"serve-emol": "npm run lint && cross-env LEVEL=silly EXTRACTOR=emol-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
+		"serve-youtube": "npm run lint && cross-env LEVEL=silly EXTRACTOR=youtube-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
+		"serve-twitter": "npm run lint && cross-env LEVEL=silly EXTRACTOR=twitter-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
+		"git-update-local": "git remote update origin --prune"
 	},
 	"author": "DEV TEAM (PI-GPI-02-2020)",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/GPI-PI-S2/EA-CORE-GPI-PI.git"
+	},
+	"bugs": {
+		"url": "https://github.com/GPI-PI-S2/EA-CORE-GPI-PI/issues"
+	},
+	"homepage": "https://github.com/GPI-PI-S2/EA-CORE-GPI-PI#readme",
 	"license": "ISC",
 	"devDependencies": {
 		"@types/axios": "^0.14.0",
-		"@types/node": "^14.11.10",
+		"@types/html-to-text": "^5.1.2",
+		"@types/jsdom": "^16.2.5",
+		"@types/node": "^14.14.6",
+		"@types/prismjs": "^1.16.2",
+		"@typescript-eslint/eslint-plugin": "^4.6.1",
+		"@typescript-eslint/parser": "^4.6.1",
+		"chalk": "^4.1.0",
+		"cross-env": "^7.0.2",
+		"eslint": "^7.13.0",
+		"eslint-config-prettier": "^6.15.0",
+		"eslint-plugin-prettier": "^3.1.4",
+		"jsdom": "^16.4.0",
+		"prismjs": "^1.22.0",
 		"ts-node-dev": "^1.0.0",
 		"tsconfig-paths": "^3.9.0",
-		"typescript": "^4.0.3"
+		"typescript": "^4.0.5"
 	},
 	"dependencies": {
-		"@mtproto/core": "5.0.0",
-		"axios": "^0.20.0",
-		"languagedetect": "^2.0.0"
-	},
-	"_moduleAliases": {
-		"@/": "./src/"
+		"@mtproto/core": "5.1.0",
+		"axios": "^0.21.0",
+		"ea-common-gpi-pi": "github:GPI-PI-S2/EA-COMMON-GPI-PI#main",
+		"html-to-text": "^6.0.0",
+		"languagedetect": "^2.0.0",
+		"reflect-metadata": "^0.1.13",
+		"tsyringe": "^4.3.0",
+		"tweet-parser": "^0.2.0",
+		"winston": "^3.3.3"
 	}
 }

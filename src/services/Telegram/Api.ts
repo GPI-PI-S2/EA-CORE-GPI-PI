@@ -1,110 +1,116 @@
-import { CError } from "@/common/Error";
-import { Logger } from "@/common/Logger";
-import { MTProto } from "@mtproto/core";
-
+import { MTProto } from '@mtproto/core';
+import { CError } from 'ea-common-gpi-pi';
+import { container } from 'tsyringe';
+import { Logger } from 'winston';
 export class Api {
-	private readonly logger = new Logger("telegram-api");
 	private readonly client: MTProto;
+	private logger: Logger = container.resolve('logger');
 	constructor(private readonly config: Api.Config) {
 		this.client = new MTProto({ api_id: config.apiId, api_hash: config.apiHash });
 	}
 	private async setNearestDC() {
-		const response = (await this.client.call("help.getNearestDc", {})) as Api.NearestDC.Response;
+		const response = (await this.client.call(
+			'help.getNearestDc',
+			{},
+		)) as Api.NearestDC.Response;
 		this.client.setDefaultDc(response.nearest_dc);
 		return;
 	}
-	async isLogged() {
+	async isLogged(): Promise<boolean> {
 		let logged = false;
 		try {
-			await this.client.call("users.getFullUser", {
+			await this.client.call('users.getFullUser', {
 				id: {
-					_: "inputUserSelf",
+					_: 'inputUserSelf',
 				},
 			});
 			logged = true;
 		} catch (error) {
 			logged = false;
 		}
-		this.logger.log("is logged?", logged);
+		this.logger.silly('is logged?', logged);
 		return logged;
 	}
-	async sigIn(options: Api.SignIn.Options): Promise<{ status: boolean; message: string; codeHash?: string }> {
+	async sigIn(
+		options: Api.SignIn.Options,
+	): Promise<{ status: boolean; message: string; codeHash?: string }> {
 		try {
 			await this.setNearestDC();
 			const isLogged = await this.isLogged();
 			if (!isLogged) {
-				const response = await this.client.call("auth.signIn", {
+				const response = await this.client.call('auth.signIn', {
 					phone_number: options.phone,
 					phone_code: options.code,
 					phone_code_hash: options.codeHash,
 				});
-				this.logger.debug("sigIn Ok", response);
+				this.logger.silly('sigIn Ok', response);
 			}
-			return { status: true, message: "ok" };
+			return { status: true, message: 'ok' };
 		} catch (error) {
 			const apiError: Api.Error = error;
-			this.logger.error(error);
+			this.logger.debug('sigIn error', error);
 			switch (apiError.error_message) {
-				case "PHONE_CODE_EXPIRED":
-					throw new CError("Código de verificación expirado");
-				case "PHONE_CODE_INVALID":
-					throw new CError("Código de verificación inválido");
-				case "PHONE_NUMBER_INVALID":
-					throw new CError("Número de teléfono inválido");
-				case "PHONE_NUMBER_UNOCCUPIED":
-					throw new CError("Código no asignado al número ingresado");
+				case 'PHONE_CODE_EXPIRED':
+					throw new CError('Código de verificación expirado');
+				case 'PHONE_CODE_INVALID':
+					throw new CError('Código de verificación inválido');
+				case 'PHONE_NUMBER_INVALID':
+					throw new CError('Número de teléfono inválido');
+				case 'PHONE_NUMBER_UNOCCUPIED':
+					throw new CError('Código no asignado al número ingresado');
 			}
-			if (apiError.error_message != "PHONE_CODE_EMPTY") throw new CError("Error al intentar ingresar", error);
+			if (apiError.error_message != 'PHONE_CODE_EMPTY')
+				throw new CError('Error al intentar ingresar', error);
 		}
 		try {
-			this.logger.debug("send code");
-			const response = (await this.client.call("auth.sendCode", {
+			this.logger.silly('send code');
+			const response = (await this.client.call('auth.sendCode', {
 				phone_number: options.phone,
 				api_id: this.config.apiId,
 				api_hash: this.config.apiHash,
-				settings: { _: "codeSettings" },
+				settings: { _: 'codeSettings' },
 			})) as Api.SendCode.Response;
-			this.logger.debug("sent code", response);
+			this.logger.silly('sent code', response);
 			return {
 				status: false,
 				message:
-					"Se ha enviado un código de verificación a su cuenta de Telegram. Ingréselo para poder continuar",
+					'Se ha enviado un código de verificación a su cuenta de Telegram. Ingréselo para poder continuar',
 				codeHash: response.phone_code_hash,
 			};
 		} catch (error) {
 			const apiError: Api.Error = error;
 			// TODO implementar autenticación "2FA"
-			if (apiError.error_message === "SESSION_PASSWORD_NEEDED")
-				throw new CError("Error al intentar generar el código", apiError);
+			if (apiError.error_message === 'SESSION_PASSWORD_NEEDED')
+				throw new CError('Error al intentar generar el código', apiError);
 		}
 	}
-	async getDialogs(limit: number) {
+	async getDialogs(limit: number): Promise<Api.GetDialogs.Response> {
 		try {
-			this.logger.debug("Obteniendo dialogos");
-			const response = (await this.client.call("messages.getDialogs", {
+			this.logger.silly('Obteniendo dialogos');
+			const response = (await this.client.call('messages.getDialogs', {
 				limit,
-				offset_peer: { _: "inputPeerEmpty" },
+				offset_peer: { _: 'inputPeerEmpty' },
 			})) as Api.GetDialogs.Response;
-			this.logger.debug("Dialogos obtenidos", response);
+			this.logger.silly('Dialogos obtenidos', response);
 			return response;
 		} catch (error) {
 			const apiError: Api.Error = error;
-			throw new CError("Error al intentar obtener los chats", apiError);
+			throw new CError('Error al intentar obtener los chats', apiError);
 		}
 	}
 	async getHistory(options: Api.GetHistory.Options): Promise<Api.GetHistory.Response> {
 		try {
 			const { limit, max_id, peer } = options;
-			this.logger.debug("Obteniendo mensajes");
-			const response = await this.client.call("messages.getHistory", {
+			this.logger.silly('Obteniendo mensajes');
+			const response = await this.client.call('messages.getHistory', {
 				peer,
 				limit,
 				max_id,
 			});
-			return response as any;
+			return response as Api.GetHistory.Response;
 		} catch (error) {
 			const apiError: Api.Error = error;
-			throw new CError("Error al intentar obtener los mensajes", apiError);
+			throw new CError('Error al intentar obtener los mensajes', apiError);
 		}
 	}
 }
@@ -115,13 +121,13 @@ export namespace Api {
 		access_hash: string;
 	};
 	export type errorMessage =
-		| "PHONE_CODE_EXPIRED"
-		| "PHONE_CODE_INVALID"
-		| "PHONE_NUMBER_INVALID"
-		| "PHONE_NUMBER_UNOCCUPIED"
-		| "SESSION_PASSWORD_NEEDED"
+		| 'PHONE_CODE_EXPIRED'
+		| 'PHONE_CODE_INVALID'
+		| 'PHONE_NUMBER_INVALID'
+		| 'PHONE_NUMBER_UNOCCUPIED'
+		| 'SESSION_PASSWORD_NEEDED'
 		| string;
-	export type user = conversation<"user"> & {
+	export type user = conversation<'user'> & {
 		self: boolean;
 		username?: string;
 		first_name?: string;
@@ -132,14 +138,14 @@ export namespace Api {
 		bot?: true;
 		phone?: string;
 	};
-	export type channel = conversation<"channel"> & {
+	export type channel = conversation<'channel'> & {
 		title: string;
 		username?: string;
 		participants_count?: number;
 		restricted?: true;
 		left?: boolean;
 	};
-	export type chat = conversation<"chat"> & {
+	export type chat = conversation<'chat'> & {
 		title: string;
 		kicked?: true;
 		deactivated?: true;
@@ -147,21 +153,21 @@ export namespace Api {
 		participants_count?: number;
 	};
 	export type peerChat = {
-		_: "inputPeerChat";
+		_: 'inputPeerChat';
 		chat_id: number;
 	};
 	export type peerUser = {
-		_: "inputPeerUser";
+		_: 'inputPeerUser';
 		user_id: number;
 		access_hash: string;
 	};
 	export type peerChannel = {
-		_: "inputPeerChannel";
+		_: 'inputPeerChannel';
 		channel_id: number;
 		access_hash: string;
 	};
 	export type message = {
-		_: "message";
+		_: 'message';
 		id: number;
 		from_id: number;
 		to_id: number;
@@ -183,7 +189,7 @@ export namespace Api {
 	}
 	export namespace GetDialogs {
 		export interface Response {
-			_: "messages.dialogsSlice";
+			_: 'messages.dialogsSlice';
 			count: number;
 			chats: (chat | channel)[];
 			users: user[];
@@ -201,7 +207,7 @@ export namespace Api {
 	}
 	export namespace NearestDC {
 		export interface Response {
-			_: "nearestDc";
+			_: 'nearestDc';
 			country: string;
 			this_dc: number;
 			nearest_dc: number;

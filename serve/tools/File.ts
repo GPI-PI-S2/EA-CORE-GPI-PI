@@ -1,5 +1,5 @@
-import fs from "fs";
-import { isObject } from "../src/common/utils";
+import { isObject } from 'ea-common-gpi-pi';
+import fs from 'fs';
 export class File {
 	constructor(private filepath: string) {}
 	private rawContent: Buffer;
@@ -12,7 +12,9 @@ export class File {
 			return false;
 		}
 	}
-	async read<T extends "string" | "object">(as: T): Promise<T extends "string" ? string : object> {
+	async read<T extends 'string' | 'object'>(
+		as: T,
+	): Promise<T extends 'string' ? string : object> {
 		let raw: Buffer;
 		if (this.rawContent) raw = this.rawContent;
 		else {
@@ -24,7 +26,7 @@ export class File {
 			}
 		}
 		const content = raw.toString();
-		if (as === "string") return content as any;
+		if (as === 'string') return content as any;
 		return JSON.parse(content);
 	}
 	async write(content: string | object) {
