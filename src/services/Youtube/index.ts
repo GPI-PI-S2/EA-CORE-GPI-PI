@@ -42,7 +42,7 @@ export class Youtube extends Extractor {
 					params: {
 						videoId: metaKey,
 						pageToken: tokenPage,
-						maxResults: 100,
+						maxResults: limit > 100 ? 100 : limit,
 						textFormat: 'plainText',
 					},
 				});
@@ -58,7 +58,7 @@ export class Youtube extends Extractor {
 						),
 				);
 				tokenPage = response.data.nextPageToken;
-				this.logger.silly(`Comentarios actualmente escaneados: ${filtered.length}`);
+				this.logger.debug(`Comentarios actualmente escaneados: ${filtered.length}`);
 				if (filtered.length > limit) {
 					break;
 				}

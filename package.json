@@ -6,11 +6,14 @@
 	"description": "Extracte contenido de diferentes fuentes y analiza según el modelo <nombre>",
 	"scripts": {
 		"build": "tsc -p ./tsconfig.json",
+		"lint": "eslint . --ext .ts",
 		"serve-telegram": "cross-env LEVEL=silly EXTRACTOR=telegram-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
 		"serve-reddit": "cross-env LEVEL=silly EXTRACTOR=reddit-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
 		"serve-emol": "cross-env LEVEL=silly EXTRACTOR=emol-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
 		"serve-youtube": "cross-env LEVEL=silly EXTRACTOR=youtube-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
-		"serve-twitter": "tsnd --respawn -r tsconfig-paths/register ./serve/twitter.ts"
+		"serve-twitter": "cross-env LEVEL=silly EXTRACTOR=twitter-extractor tsnd --respawn -r tsconfig-paths/register ./serve",
+		"git-clear-repo": "git branch --merged | grep -v '\\*\\|master\\|dev' | xargs -n 1 git branch -d",
+		"git-update-local": "git remote update origin --prune"
 	},
 	"author": "DEV TEAM (PI-GPI-02-2020)",
 	"license": "ISC",
@@ -41,6 +44,7 @@
 		"languagedetect": "^2.0.0",
 		"reflect-metadata": "^0.1.13",
 		"tsyringe": "^4.3.0",
+		"tweet-parser": "^0.2.0",
 		"winston": "^3.3.3"
 	},
 	"_moduleAliases": {

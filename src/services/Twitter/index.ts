@@ -1,90 +1,145 @@
+import { Analyzer } from '@/Analyzer';
+import Axios, { AxiosInstance } from 'axios';
+import { inject, injectable } from 'tsyringe';
+import tweetParser from 'tweet-parser';
+import { Logger } from 'winston';
+import { Extractor } from '../Extractor';
+import { Response } from '../Extractor/Response';
 
-import { Analyzer } from "@/Analyzer";
-import Axios, { AxiosInstance } from "axios";
-import { Extractor } from "../Extractor";
-import { Response } from "../Extractor/Response";
-
+@injectable()
 export class Twitter extends Extractor {
-	
-    private api: AxiosInstance; // En caso de instanciar desde deploy remover readonly
-	
-	constructor() {
+	private static tweetParse(tweet: Twitter.Tweet, hashtags = false): string {
+		const parsed = tweetParser(tweet.text);
+		let stringParsed = parsed
+			.map((entity) => {
+				if (entity.type === 'TEXT' && entity.content != ' ' && entity.content !== '')
+					return entity.content;
+				else if (hashtags && entity.type === 'HASH') return entity.content;
+				else if (entity.type === 'HASH') {
+					return entity.content.replace('#', '') + ' ';
+				} else return '';
+			})
+			.join('');
+		if (hashtags) {
+			stringParsed = stringParsed.split('#').join(' #');
+		}
+		stringParsed = stringParsed
+			.replace(/RT : /g, '')
+			.replace(/\n\n/g, '\n')
+			.replace(/ {2}/g, ' ')
+			.replace(/\n\n/g, '\n')
+			.replace(/ {2}/g, ' ')
+			.replace(/ {1}\n/g, '\n');
+
+		if (stringParsed.startsWith(' ')) stringParsed = stringParsed.slice(1);
+		if (stringParsed.endsWith(' ')) stringParsed = stringParsed.slice(0, -1);
+		return stringParsed;
+	}
+	constructor(@inject('logger') private logger: Logger) {
 		super({
-			id: "twitter-extractor", // Identificador, solo letras minúsculas y guiones (az-)
-			name: "Twitter", // Nombre legible para humanos
-			version: "0.0.0",
+			id: 'twitter-extractor', // Identificador, solo letras minúsculas y guiones (az-)
+			name: 'Twitter', // Nombre legible para humanos
+			version: '0.0.0',
 		});
 	}
-	async deploy(config: Twitter.Deploy.Config, options: Twitter.Deploy.Options): Promise<Response<unknown>> {
-		// bearerToken = AAAAAAAAAAAAAAAAAAAAAJewJQEAAAAAPOlJ%2BAGXOMiIAG7dDUUtTaFAOgs%3DKLpEMQCsq33R2kwwnADok1ujE9v65o4eSf34m5b4yupPvGCi40
+	private api: AxiosInstance; // En caso de instanciar desde deploy remover readonly
 
-	   	this.api = Axios.create({
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	async deploy(
+		config: Twitter.Deploy.Config,
+		options?: Twitter.Deploy.Options,
+	): Promise<Response<unknown>> {
+		const { bearerToken } = config;
+		this.api = Axios.create({
 			baseURL: 'https://api.twitter.com/2/tweets',
-			responseType: "json",
+			responseType: 'json',
 			headers: {
-				'Authorization': 'Bearer '+ config.bearerToken
-			}
-	  	});
-		this.logger.log('Deployed.')
+				Authorization: 'Bearer ' + bearerToken,
+			},
+		});
+		this.logger.verbose('DEPLOY', { config, options });
 		return new Response(this, Response.Status.OK);
 	}
-	async obtain(options: Twitter.Obtain.Options): Promise<Response<unknown>> {
-		/*
-		Función para obtener una lista de Tweets, el limite máximo de tweets es de 100
-		*/
-		const { hashtag, limit, metaKey, minSentenceSize} = options;
-		const query = '#'+ hashtag
-		this.logger.debug("Searching by hashtag: ", query);
 
+	/**
+	 * Función para obtener una lista de Tweets, el limite máximo de tweets es de 100
+	 *
+	 * @param {Twitter.Obtain.Options} options
+	 * @returns {Promise<Response<unknown>>}
+	 * @memberof Twitter
+	 */
+	async obtain(options: Twitter.Obtain.Options): Promise<Response<unknown>> {
+		const { limit, metaKey, minSentenceSize } = options;
+		this.logger.verbose('OBTAIN', options);
+		let filtered: Analyzer.input[] = [];
+		let tokenPage = '';
 		try {
-			const response = await this.api.get(
-				'/search/recent', {
+			while (tokenPage != undefined) {
+				const response = await this.api.get<Twitter.RecentSearch>('/search/recent', {
 					params: {
-						max_results: limit,
-						query: query
-					}
+						max_results: limit > 100 ? 100 : limit,
+						query: metaKey,
+						next_token: tokenPage ? tokenPage : undefined,
+					},
 				});
-			this.logger.log("Request status: ", response.status);
-			const tweets = response.data.data
-			const tweetsTexts = tweets.map(function (tweet:any) {
-				return tweet.text; 
-			});
-						
+				const tweets = response.data.data;
+				filtered = filtered
+					.concat(tweets.map((tweet) => ({ content: Twitter.tweetParse(tweet) })))
+					.filter((content) => Analyzer.filter(content, { minSentenceSize }));
+				tokenPage = response.data.meta.next_token;
+				this.logger.debug(`Tweets actualmente escaneados: ${filtered.length}`);
+				if (filtered.length > limit) {
+					break;
+				}
+			}
+			const resultLength = filtered.length;
+			if (resultLength > limit) filtered = filtered.slice(resultLength - limit);
+			this.logger.silly('filtered:', filtered);
+			this.logger.silly('length:', filtered.length);
 			const analyzer = new Analyzer(this);
-			const tweetsTxts: Analyzer.input[] = tweetsTexts.map((content: any) => ({content}));
-			this.logger.log("Tweet's Content Length: ", tweetsTxts);
-			const filteredTweets = tweetsTxts.filter(tweet => Analyzer.filter(tweet, {minSentenceSize}));
-			this.logger.log("Valid tweets: ", filteredTweets.length);
-			const analysis = await analyzer.analyze(filteredTweets);
-			this.logger.log("Analysis: ", analysis);
+			const analysis = await analyzer.analyze(filtered, { metaKey });
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
-		}
-		catch (error) {
-			this.logger.error(error.response);
+		} catch (error) {
+			this.logger.debug('OBTAIN error', error);
 			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR);
 		}
-        
-		return new Response(this, Response.Status.OK);
 	}
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async unitaryObtain(options: Twitter.UnitaryObtain.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async destroy(options: Twitter.Destroy.Options): Promise<Response<unknown>> {
 		return new Response(this, Response.Status.OK);
 	}
 }
 export namespace Twitter {
+	export interface Tweet {
+		id: string;
+		lang?: string;
+		text: string;
+		created_at?: string;
+		conversation_id?: string;
+	}
+	export interface Search<K extends unknown> {
+		data: K[];
+		meta: {
+			newest_id: string;
+			oldest_id: string;
+			result_count: number;
+			next_token: string;
+		};
+	}
+	export interface RecentSearch extends Search<Tweet> {}
 	export namespace Deploy {
 		export interface Config extends Extractor.Deploy.Config {
-            bearerToken: string;
+			bearerToken: string;
 		}
 		export interface Options extends Extractor.Deploy.Options {}
 		export interface Response extends Extractor.Deploy.Response {}
 	}
 	export namespace Obtain {
-		export interface Options extends Extractor.Obtain.Options {
-			hashtag:string;
-		}
+		export interface Options extends Extractor.Obtain.Options {}
 		export interface Response extends Extractor.Obtain.Response {}
 	}
 	export namespace UnitaryObtain {

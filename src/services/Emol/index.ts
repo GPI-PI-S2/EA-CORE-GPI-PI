@@ -41,12 +41,12 @@ export class Emol extends Extractor {
 		const { metaKey: url, limit, minSentenceSize } = options;
 		const analyzer = new Analyzer(this);
 		try {
-			const response = (await this.api.get('', {
+			const response = await this.api.get<Emol.Api.Data>('', {
 				params: {
 					url,
 					limit,
 				},
-			})) as Emol.Api.Response;
+			});
 			const comments: Analyzer.input[] = response.data.comments
 				.filter((comment, index) => index < limit && comment.text !== '  ')
 				.map((comment) => {
@@ -112,9 +112,6 @@ export namespace Emol {
 			userTotalFollowers: number;
 			userTotalFollowing: number;
 			comments: Comment[];
-		}
-		export interface Response {
-			data: Data;
 		}
 	}
 	export namespace Deploy {
