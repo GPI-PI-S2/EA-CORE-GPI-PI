@@ -1,3 +1,0 @@
-[submodule "src/common"]
-	path = src/common
-	url = git@github.com:danielfl41/EA-COMMON-GPI-PI.git
