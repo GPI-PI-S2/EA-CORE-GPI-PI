@@ -102,7 +102,7 @@ export class Telegram extends Extractor {
 	async deploy(
 		config: Telegram.Deploy.Config,
 		options: Telegram.Deploy.Options,
-	): Promise<Response<unknown>> {
+	): Promise<Response<Telegram.Deploy.PendingResponse | { chats: Telegram.Deploy.chat[] }>> {
 		try {
 			this.logger.verbose('DEPLOY', { config, options });
 			this.api = new Api(config);
@@ -124,10 +124,10 @@ export class Telegram extends Extractor {
 			const chats = Telegram.parseChats(dialogs);
 			return new Response(this, Response.Status.OK, { chats });
 		} catch (error) {
-			return new Response(this, Response.Status.ERROR, error);
+			return new Response(this, Response.Status.ERROR, null, error);
 		}
 	}
-	async obtain(options: Telegram.Obtain.Options): Promise<Response<unknown>> {
+	async obtain(options: Telegram.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
 		this.logger.verbose('OBTAIN', { options });
 		const { minSentenceSize, metaKey } = options;
 		const peer = Telegram.parsePeer(options);

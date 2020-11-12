@@ -20,6 +20,9 @@ export default async (extractor: Youtube) => {
 	if (limit === 0 || isNaN(limit))
 		limit = Number(await Readline.read('Ingrese el límite de comentarios a analizar'));
 	let videoId = await getVideoId(urlVideo);
+	if (!videoId) {
+		return logger.error('invalid video ID');
+	}
 	await extractor.deploy({ apiKey });
 	const result = (await extractor.obtain({ metaKey: videoId, limit })) as Response<
 		Youtube.Obtain.Response

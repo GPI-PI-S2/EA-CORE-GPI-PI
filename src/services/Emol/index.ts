@@ -25,7 +25,7 @@ export class Emol extends Extractor {
 	async deploy(
 		config: Emol.Deploy.Config = {},
 		options: Emol.Deploy.Options = {},
-	): Promise<Response<unknown>> {
+	): Promise<Response<null>> {
 		this.logger.verbose('DEPLOY', { config, options });
 		// https://github.com/axios/axios#axios-api
 		this.api = Axios.create({
@@ -36,7 +36,7 @@ export class Emol extends Extractor {
 
 		return new Response(this, Response.Status.OK);
 	}
-	async obtain(options: Emol.Obtain.Options): Promise<Response<unknown>> {
+	async obtain(options: Emol.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
 		this.logger.verbose('OBTAIN', { options });
 		const { metaKey: url, limit, minSentenceSize } = options;
 		const analyzer = new Analyzer(this);
@@ -64,7 +64,7 @@ export class Emol extends Extractor {
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
 			this.logger.silly('OBTAIN error', error);
-			return new Response(this, Response.Status.ERROR, error);
+			return new Response(this, Response.Status.ERROR, null, error);
 		}
 	}
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars

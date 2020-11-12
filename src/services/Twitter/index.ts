@@ -48,7 +48,7 @@ export class Twitter extends Extractor {
 	async deploy(
 		config: Twitter.Deploy.Config,
 		options?: Twitter.Deploy.Options,
-	): Promise<Response<unknown>> {
+	): Promise<Response<null>> {
 		const { bearerToken } = config;
 		this.api = Axios.create({
 			baseURL: 'https://api.twitter.com/2/tweets',
@@ -68,7 +68,7 @@ export class Twitter extends Extractor {
 	 * @returns {Promise<Response<unknown>>}
 	 * @memberof Twitter
 	 */
-	async obtain(options: Twitter.Obtain.Options): Promise<Response<unknown>> {
+	async obtain(options: Twitter.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
 		const { limit, metaKey, minSentenceSize } = options;
 		this.logger.verbose('OBTAIN', options);
 		let filtered: Analyzer.input[] = [];
@@ -101,7 +101,7 @@ export class Twitter extends Extractor {
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
 			this.logger.debug('OBTAIN error', error);
-			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR);
+			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR, null, error);
 		}
 	}
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars

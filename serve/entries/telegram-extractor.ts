@@ -14,10 +14,10 @@ type content = {
 const config = { apiId: 1862196, apiHash: 'ecf4f984d701a3ee7a909d0c505d2df5' };
 async function login(extractor: Telegram) {
 	const file = new File('./serve/entries/telegramUser.json');
-	let phone: string;
+	let phone = '';
 	let code = NaN;
-	let codeHash: string;
-	let auth: string;
+	let codeHash = '';
+	let auth = '';
 	if (await file.exist()) {
 		const content = (await file.read('object')) as content;
 		phone = content['phone'];

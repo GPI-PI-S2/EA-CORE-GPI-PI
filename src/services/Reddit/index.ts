@@ -40,7 +40,7 @@ export class Reddit extends Extractor {
 		config?: Reddit.Deploy.Config,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		options?: Reddit.Deploy.Options,
-	): Promise<Response<unknown>> {
+	): Promise<Response<null>> {
 		this.logger.verbose('DEPLOY', { config, options });
 		this.api = Axios.create({
 			baseURL: 'https://www.reddit.com', // Base URL,
@@ -49,7 +49,7 @@ export class Reddit extends Extractor {
 		return new Response(this, Response.Status.OK);
 	}
 
-	async obtain(options: Reddit.Obtain.Options): Promise<Response<unknown>> {
+	async obtain(options: Reddit.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
 		// oauth Reddit 0XGi1M9cPjNx1oAmjp51n0PLPlaSPg
 		const { limit, minSentenceSize, subReddit, postId } = options;
 		const subRedditParam = subReddit ? `/r/${subReddit}` : '';
@@ -77,7 +77,7 @@ export class Reddit extends Extractor {
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
 			this.logger.debug('OBTAIN error', error);
-			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR);
+			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR, null, error);
 		}
 	}
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars

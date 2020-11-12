@@ -19,7 +19,7 @@ export class Youtube extends Extractor {
 		config: Youtube.Deploy.Config,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		options?: Youtube.Deploy.Options,
-	): Promise<Response<unknown>> {
+	): Promise<Response<null>> {
 		this.logger.verbose('DEPLOY', { config, options });
 		const { apiKey } = config;
 		this.api = Axios.create({
@@ -29,7 +29,7 @@ export class Youtube extends Extractor {
 		});
 		return new Response(this, Response.Status.OK);
 	}
-	async obtain(options: Youtube.Obtain.Options): Promise<Response<unknown>> {
+	async obtain(options: Youtube.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
 		const { metaKey, limit, minSentenceSize } = options;
 		let filtered: Analyzer.input[] = [];
 		const analyzer = new Analyzer(this);
@@ -69,7 +69,7 @@ export class Youtube extends Extractor {
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
 			this.logger.debug('OBTAIN error', error);
-			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR);
+			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR, null, error);
 		}
 	}
 	async unitaryObtain(options: Youtube.UnitaryObtain.Options): Promise<Response<unknown>> {
@@ -123,11 +123,11 @@ export class Youtube extends Extractor {
 			return new Response(this, Response.Status.OK, analysis);
 		} catch (error) {
 			this.logger.debug('UNITARY OBTAIN', error);
-			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR);
+			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR, null, error);
 		}
 	}
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async destroy(options: Youtube.Destroy.Options): Promise<Response<unknown>> {
+	async destroy(options: Youtube.Destroy.Options): Promise<Response<null>> {
 		return new Response(this, Response.Status.OK);
 	}
 }
