@@ -6,15 +6,15 @@ export abstract class Extractor {
 	get register(): Extractor.Register & { extractorVersion: string } {
 		return { ...this._register, extractorVersion: Extractor.version };
 	}
-	abstract async deploy(
+	abstract deploy(
 		config: Extractor.Deploy.Config,
 		options: Extractor.Deploy.Options,
 	): Promise<Response<Extractor.Deploy.Response>>;
-	abstract async obtain(config: Extractor.Obtain.Options): Promise<Response<unknown>>;
-	abstract async unitaryObtain(
+	abstract obtain(config: Extractor.Obtain.Options): Promise<Response<unknown>>;
+	abstract unitaryObtain(
 		config: Extractor.UnitaryObtain.Options,
 	): Promise<Response<Extractor.UnitaryObtain.Response>>;
-	abstract async destroy(config: Extractor.Destroy.Options): Promise<Response<unknown>>;
+	abstract destroy(config: Extractor.Destroy.Options): Promise<Response<unknown>>;
 }
 export namespace Extractor {
 	export interface Register {

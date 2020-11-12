@@ -3,6 +3,7 @@ import LanguageDetect from 'languagedetect';
 import { Extractor } from '../services/Extractor';
 
 export class Analyzer {
+	private static version = '1.0';
 	private static newResult(): Analyzer.sentiments {
 		return {
 			'Autoconciencia Emocional': 0,
@@ -74,6 +75,7 @@ export class Analyzer {
 			sentiments: Analyzer.newResult(),
 		}));
 		return {
+			modelVersion: Analyzer.version,
 			extractor,
 			metaKey,
 			result,
@@ -113,6 +115,7 @@ export namespace Analyzer {
 	export interface Analysis {
 		extractor: string;
 		metaKey: string;
+		modelVersion: string;
 		result: {
 			input: input;
 			sentiments: sentiments;

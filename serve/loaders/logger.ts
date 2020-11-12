@@ -1,4 +1,5 @@
 import { config, createLogger, format, transports } from 'winston';
+import { ConsoleTransportInstance } from 'winston/lib/winston/transports';
 import prismjs from './prismjs';
 const { combine, json, splat, cli, printf } = format;
 
@@ -17,7 +18,7 @@ const myFormat = printf(({ level, message, timestamp, ...metadata }) => {
 		return delimiter;
 	} else return msg;
 });
-const cTransports = [];
+const cTransports: ConsoleTransportInstance[] = [];
 cTransports.push(
 	new transports.Console({
 		format: combine(),
