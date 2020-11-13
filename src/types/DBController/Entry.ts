@@ -17,7 +17,6 @@ export namespace DBEntry {
 		extractor: string;
 		metaKey: string;
 		content: string;
-		_entryId: string;
 	}
 	export interface Filter {
 		extractor?: string;
