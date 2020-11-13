@@ -31,7 +31,8 @@ namespace Extractors {
 		| 'telegram-extractor'
 		| 'youtube-extractor'
 		| 'reddit-extractor'
-		| 'emol-extractor';
+		| 'emol-extractor'
+		| 'twitter-extractor';
 	export type get<T extends availables> = T extends 'telegram-extractor'
 		? Telegram
 		: T extends 'youtube-extractor'
@@ -40,6 +41,8 @@ namespace Extractors {
 		? Reddit
 		: T extends 'emol-extractor'
 		? Emol
+		: T extends 'twitter-extractor'
+		? Twitter
 		: never;
 }
 export default (extractors as unknown) as Extractors.extractors;
