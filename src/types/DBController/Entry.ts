@@ -1,9 +1,9 @@
 import { DBController } from './';
 export abstract class DBEntry {
-	abstract create(entry: DBEntry.Input, force: boolean): Promise<void>;
-	abstract read(_id: string): Promise<DBEntry.Entry>;
-	abstract update(_id: string, entry: DBEntry.Input): Promise<void>;
-	abstract delete(_id: string): Promise<void>;
+	abstract create(entry: DBEntry.Input, force: boolean): Promise<{ _id: DBController.id }>;
+	abstract read(_id: DBController.id): Promise<DBEntry.Entry>;
+	abstract update(_id: DBController.id, entry: DBEntry.Input): Promise<void>;
+	abstract delete(_id: DBController.id): Promise<void>;
 	abstract list(
 		paginator: DBController.Paginator,
 		filter?: DBEntry.Filter,

@@ -12,8 +12,9 @@ export abstract class DBController {
 	abstract bulkDB(dbPath: string): Promise<DBController.bulkDBResult>;
 }
 export namespace DBController {
+	export type id = string | number;
 	export interface Base {
-		_id: string;
+		_id: id;
 		_deleted: boolean;
 	}
 	export type input<T extends Base> = Partial<Omit<T, '_id' | '_deleted'>>;
