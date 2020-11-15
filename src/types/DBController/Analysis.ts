@@ -1,15 +1,15 @@
 import { Analyzer } from 'src/Analyzer';
 import { DBController } from './';
 export abstract class DBAnalysis {
-	abstract create(enalysis: DBAnalysis.Input, force: boolean): Promise<void>;
-	abstract read(_id: string): Promise<DBAnalysis.Analysis>;
-	abstract update(_id: string, entry: DBAnalysis.Input): Promise<void>;
-	abstract delete(_id: string): Promise<void>;
+	abstract create(enalysis: DBAnalysis.Input, force: boolean): Promise<{ _id: DBController.id }>;
+	abstract read(_id: DBController.id): Promise<DBAnalysis.Analysis>;
+	abstract update(_id: DBController.id, entry: DBAnalysis.Input): Promise<void>;
+	abstract delete(_id: DBController.id): Promise<void>;
 }
 export namespace DBAnalysis {
 	export type Input = DBController.input<Analysis>;
 	export interface Analysis extends Analyzer.sentiments, DBController.Base {
-		_entryId: string;
+		_entryId: DBController.id;
 		completionDate: string;
 		modelVersion: string;
 	}
