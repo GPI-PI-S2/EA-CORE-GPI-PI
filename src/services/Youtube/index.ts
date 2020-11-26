@@ -33,11 +33,13 @@ export class Youtube extends Extractor {
 		const { metaKey, limit, minSentenceSize } = options;
 		let filtered: Analyzer.input[] = [];
 		const analyzer = new Analyzer(this);
+		//const subComents: string[] = [];
 		this.logger.verbose('OBTAIN', options);
-		// Repeticiones para mas comentarios
 		let tokenPage = '';
+		// Repeticiones para mas comentarios
 		try {
 			while (tokenPage != undefined) {
+				this.logger.info('pidiendo->', tokenPage);
 				const response = await this.api.get<Youtube.CommentThreads>('commentThreads', {
 					params: {
 						videoId: metaKey,
@@ -46,6 +48,7 @@ export class Youtube extends Extractor {
 						textFormat: 'plainText',
 					},
 				});
+				this.logger.info('recibido');
 				filtered = filtered.concat(
 					response.data.items
 						.map((comment) =>
@@ -58,7 +61,7 @@ export class Youtube extends Extractor {
 						),
 				);
 				tokenPage = response.data.nextPageToken;
-				this.logger.debug(`Comentarios actualmente escaneados: ${filtered.length}`);
+				this.logger.info(`Comentarios actualmente escaneados: ${filtered.length}`);
 				if (filtered.length > limit) {
 					break;
 				}
@@ -80,8 +83,8 @@ export class Youtube extends Extractor {
 		try {
 			const response = await this.api.get<Youtube.Comments>('comments', {
 				params: {
-					key: options.apiKey,
-					id: options.metaKey, // commentId
+					key: apiKey,
+					id: metaKey, // commentId
 					part: 'snippet',
 				},
 			});
@@ -92,7 +95,7 @@ export class Youtube extends Extractor {
 			comments.push(commentOriginal);
 
 			// has replies?
-			if (options.limitComment != undefined) {
+			if (limitComment != undefined) {
 				while (tokenPage != undefined) {
 					const response2 = await this.api.get<Youtube.Comments>('comments', {
 						params: {
