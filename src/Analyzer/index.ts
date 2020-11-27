@@ -84,9 +84,7 @@ export class Analyzer {
 			metaKey,
 			result,
 		};
-		console.log(isDBCAvailable, '\n', container);
 		if (isDBCAvailable) {
-			console.warn('acá');
 			const DBController = container.resolve<DBController>('DBController');
 			await DBController.connect();
 			await DBController.insert(response, false);

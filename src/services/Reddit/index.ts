@@ -41,7 +41,6 @@ export class Reddit extends Extractor {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		options?: Reddit.Deploy.Options,
 	): Promise<Response<null>> {
-		console.log('level=>', this.logger.level);
 		this.logger.verbose('DEPLOY', { config, options });
 		this.api = Axios.create({
 			baseURL: 'https://www.reddit.com', // Base URL,
