@@ -7,6 +7,7 @@ export abstract class DBController {
 	abstract readonly $entry: DBEntry;
 	abstract readonly $analysis: DBAnalysis;
 	abstract connect(): Promise<void>;
+	abstract disconnect(): Promise<void>;
 	abstract calc(metaKey: string): Promise<DBController.calcResult>;
 	abstract stats(): Promise<{ [key: string]: number }>;
 	abstract insert(analysis: Analyzer.Analysis, force: boolean): Promise<void>;
