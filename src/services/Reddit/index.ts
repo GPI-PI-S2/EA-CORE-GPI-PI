@@ -1,4 +1,4 @@
-import Axios, { AxiosInstance } from 'axios';
+timport Axios, { AxiosInstance } from 'axios';
 import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
 import { Analyzer } from '../../Analyzer';
@@ -70,7 +70,7 @@ export class Reddit extends Extractor {
 				.filter((message) =>
 					Analyzer.filter(message, { minSentenceSize, assurance: 0.26 }),
 				);
-			this.logger.silly('filtered:', filtered);
+es			//this.logger.silly('filtered:', filtered);
 			this.logger.silly('length:', filtered.length);
 			const analyzer = new Analyzer(this);
 			const analysis = await analyzer.analyze(filtered, { metaKey });
