@@ -41,6 +41,7 @@ export class Reddit extends Extractor {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		options?: Reddit.Deploy.Options,
 	): Promise<Response<null>> {
+		console.log('level=>', this.logger.level);
 		this.logger.verbose('DEPLOY', { config, options });
 		this.api = Axios.create({
 			baseURL: 'https://www.reddit.com', // Base URL,
@@ -70,7 +71,7 @@ export class Reddit extends Extractor {
 				.filter((message) =>
 					Analyzer.filter(message, { minSentenceSize, assurance: 0.26 }),
 				);
-			//this.logger.silly('filtered:', filtered);
+			this.logger.silly('filtered:', filtered);
 			this.logger.silly('length:', filtered.length);
 			const analyzer = new Analyzer(this);
 			const analysis = await analyzer.analyze(filtered, { metaKey });
