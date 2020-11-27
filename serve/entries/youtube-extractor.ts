@@ -1,7 +1,7 @@
 import { URL } from 'url';
-import { Response } from '../../src/services/Extractor/Response';
 import { Youtube } from '../../src/services/Youtube';
 import logger from '../loaders/logger';
+import { File } from '../tools/File';
 import { Readline } from '../tools/Readline';
 
 async function getVideoId(url: string) {
@@ -13,8 +13,8 @@ export default async (extractor: Youtube) => {
 	logger.info(`name:      ${extractor.register.name}`);
 	logger.info(`version:   ${extractor.register.version}`);
 	let apiKey = 'AIzaSyCbh7V9N99YuffN2s8xeu7MmfYS4l2I180';
-	let urlVideo = 'https://www.youtube.com/watch?v=2XWgsr9It_o&t=633s';
-	let limit = 5000;
+	let urlVideo = '';
+	let limit = 1000;
 	if (!apiKey) apiKey = await Readline.read('Ingrese su propia api-key de YouTube (Google)');
 	if (!urlVideo) urlVideo = await Readline.read('Ingrese el url del video a analizar');
 	if (limit === 0 || isNaN(limit))
@@ -24,9 +24,11 @@ export default async (extractor: Youtube) => {
 		return logger.error('invalid video ID');
 	}
 	await extractor.deploy({ apiKey });
-	const result = (await extractor.obtain({ metaKey: videoId, limit })) as Response<
-		Youtube.Obtain.Response
-	>;
+	const result = await extractor.obtain({ metaKey: videoId, limit });
+	/* 	logger.debug('result get:', result.get());
+	 */ const file = new File('youtube.json');
+	const data = result.data.result.map((content) => content.input.content);
+	const total = data.length;
+	await file.write({ data, total });
 	logger.info('response ok');
-	logger.debug('result get:', result.get());
 };

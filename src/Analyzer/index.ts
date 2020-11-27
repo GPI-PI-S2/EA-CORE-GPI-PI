@@ -1,28 +1,31 @@
+import { random } from 'ea-common-gpi-pi';
 import { fromString } from 'html-to-text';
 import LanguageDetect from 'languagedetect';
+import { DBController } from 'src/types/DBController';
+import { container } from 'tsyringe';
 import { Extractor } from '../services/Extractor';
 
 export class Analyzer {
 	private static version = '1.0';
 	private static newResult(): Analyzer.sentiments {
 		return {
-			'Autoconciencia Emocional': 0,
-			'Colaboración y Cooperación': 0,
-			'Comprensión Organizativa': 0,
-			'Conciencia Crítica': 0,
-			'Desarrollo de las relaciones': 0,
-			'Manejo de conflictos': 0,
-			'Motivación de logro': 0,
-			'Percepción y comprensión Emocional': 0,
-			'Relación Social': 0,
-			'Tolerancia a la frustración': 0,
-			Asertividad: 0,
-			Autoestima: 0,
-			Empatía: 0,
-			Influencia: 0,
-			Liderazgo: 0,
-			Optimismo: 0,
-			Violencia: 0,
+			'Autoconciencia Emocional': random(0, 100) / 100,
+			'Colaboración y Cooperación': random(0, 100) / 100,
+			'Comprensión Organizativa': random(0, 100) / 100,
+			'Conciencia Crítica': random(0, 100) / 100,
+			'Desarrollo de las relaciones': random(0, 100) / 100,
+			'Manejo de conflictos': random(0, 100) / 100,
+			'Motivación de logro': random(0, 100) / 100,
+			'Percepción y comprensión Emocional': random(0, 100) / 100,
+			'Relación Social': random(0, 100) / 100,
+			'Tolerancia a la frustración': random(0, 100) / 100,
+			Asertividad: random(0, 100) / 100,
+			Autoestima: random(0, 100) / 100,
+			Empatía: random(0, 100) / 100,
+			Influencia: random(0, 100) / 100,
+			Liderazgo: random(0, 100) / 100,
+			Optimismo: random(0, 100) / 100,
+			Violencia: random(0, 100) / 100,
 		};
 	}
 	static htmlParse(input: Analyzer.input): Analyzer.input {
@@ -70,16 +73,23 @@ export class Analyzer {
 	): Promise<Analyzer.Analysis> {
 		const { metaKey } = options;
 		const extractor = this.extractor.register.id;
+		const isDBCAvailable = container.isRegistered<DBController>('DBController');
 		const result = input.map((input) => ({
 			input,
 			sentiments: Analyzer.newResult(),
 		}));
-		return {
+		const response: Analyzer.Analysis = {
 			modelVersion: Analyzer.version,
 			extractor,
 			metaKey,
 			result,
 		};
+		if (isDBCAvailable) {
+			const DBController = container.resolve<DBController>('DBController');
+			await DBController.connect();
+			await DBController.insert(response, false);
+		}
+		return response;
 	}
 }
 export namespace Analyzer {

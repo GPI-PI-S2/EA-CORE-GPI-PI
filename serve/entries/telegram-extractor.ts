@@ -31,27 +31,26 @@ async function login(extractor: Telegram) {
 	}
 	let response = await extractor.deploy(config, { phone });
 	if (response.status === Response.Status.PENDING) {
-		const pendingResponse = response.get() as Telegram.Deploy.PendingResponse;
+		const pendingResponse = response.data as Telegram.Deploy.PendingResponse;
 		codeHash = pendingResponse.codeHash;
 		while (isNaN(code) || code === null) {
 			const iCode = await Readline.read('Ingrese el código de verificación');
 			const intCode = parseInt(iCode);
 			const valid = iCode.length > 4 && !isNaN(intCode);
 			if (!valid) {
-				logger.debug('Error: Código inválido');
+				logger.info('Error: Código inválido');
 				continue;
 			}
-			code = intCode;
-			try {
-				response = await extractor.deploy(config, { phone, code, codeHash });
-				code = intCode;
-			} catch (error) {}
+
+			response = await extractor.deploy(config, { phone, code: intCode, codeHash });
+			if (response.status === Response.Status.OK) code = intCode;
+			else logger.info('Error: Código inválido');
 		}
 		await file.write({ auth, phone } as content);
 	} else if (response.status === Response.Status.ERROR) throw new Error("can't continue");
 	const content = (await file.read('object')) as content;
 	await file.write({ ...content, ...{ auth, phone } } as content);
-	return response.get() as Telegram.Deploy.Response;
+	return response.data as Telegram.Deploy.Response;
 }
 async function selectChat(chats: Telegram.Deploy.chat[]) {
 	logger.info('\nChats\n');
@@ -74,14 +73,18 @@ export default async (extractor: Telegram) => {
 	const loginResponse = await login(extractor);
 	const selectedChat = await selectChat(loginResponse.chats);
 	const { accessHash, id, type } = selectedChat;
-	const result = (await extractor.obtain({
+	const result = await extractor.obtain({
 		accessHash,
 		type,
 		chatId: id,
 		limit: 1000,
 		metaKey: JSON.stringify(selectedChat),
 		minSentenceSize: 2,
-	})) as Response<Telegram.Obtain.Response>;
+	});
+	/* 	logger.debug('result get:', result.get());
+	 */ const file = new File('telegram.json');
+	const data = result.data.result.map((content) => content.input.content);
+	const total = data.length;
+	await file.write({ data, total });
 	logger.info('response ok');
-	logger.debug('result get:', result.get());
 };
