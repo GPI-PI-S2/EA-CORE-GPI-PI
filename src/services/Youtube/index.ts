@@ -33,8 +33,8 @@ export class Youtube extends Extractor {
 		const validOptions = Youtube.deployOptionsSchema.validate(options);
 		if (validConfig.error || validOptions.error)
 			return new Response(this, Response.Status.ERROR, {
-				configError: validConfig.error.details,
-				optionsError: validOptions.error.details,
+				configError: validConfig.error ? validConfig.error.message : undefined,
+				optionsError: validOptions.error ? validOptions.error.message : undefined,
 			} as never);
 
 		const { apiKey } = config;
@@ -51,7 +51,7 @@ export class Youtube extends Extractor {
 		const validOptions = Youtube.obtainOptionsSchema.validate(options);
 		if (validOptions.error)
 			return new Response(this, Response.Status.ERROR, {
-				optionsError: validOptions.error.details,
+				optionsError: validOptions.error ? validOptions.error.message : undefined,
 			} as never);
 
 		const { metaKey, limit, minSentenceSize } = options;

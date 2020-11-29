@@ -55,8 +55,8 @@ export class Reddit extends Extractor {
 		const validOptions = Extractor.deployOptionsSchema.validate(options);
 		if (validConfig.error || validOptions.error)
 			return new Response(this, Response.Status.ERROR, {
-				configError: validConfig.error.details,
-				optionsError: validOptions.error.details,
+				configError: validConfig.error ? validConfig.error.message : undefined,
+				optionsError: validOptions.error ? validOptions.error.message : undefined,
 			});
 
 		this.api = Axios.create({
@@ -79,7 +79,7 @@ export class Reddit extends Extractor {
 		const validOptions = Reddit.obtainOptionsSchema.validate(options);
 		if (validOptions.error)
 			return new Response(this, Response.Status.ERROR, {
-				optionsError: validOptions.error.details,
+				optionsError: validOptions.error ? validOptions.error.message : undefined,
 			} as never);
 
 		try {

@@ -62,8 +62,8 @@ export class Twitter extends Extractor {
 		const validOptions = Twitter.deployOptionsSchema.validate(options);
 		if (validConfig.error || validOptions.error)
 			return new Response(this, Response.Status.ERROR, {
-				configError: validConfig.error.details,
-				optionsError: validOptions.error.details,
+				configError: validConfig.error ? validConfig.error.message : undefined,
+				optionsError: validOptions.error ? validOptions.error.message : undefined,
 			} as never);
 
 		const { bearerToken } = config;
@@ -89,7 +89,7 @@ export class Twitter extends Extractor {
 		const validOptions = Twitter.obtainOptionsSchema.validate(options);
 		if (validOptions.error)
 			return new Response(this, Response.Status.ERROR, {
-				optionsError: validOptions.error.details,
+				optionsError: validOptions.error ? validOptions.error.message : undefined,
 			} as never);
 
 		const { limit, metaKey, minSentenceSize } = options;
