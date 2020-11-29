@@ -44,10 +44,16 @@ async function login(extractor: Telegram) {
 
 			response = await extractor.deploy(config, { phone, code: intCode, codeHash });
 			if (response.status === Response.Status.OK) code = intCode;
-			else logger.info('Error: Código inválido');
+			else {
+				logger.error('deploy code error', response.data);
+				logger.info('Error: Código inválido');
+			}
 		}
 		await file.write({ auth, phone } as content);
-	} else if (response.status === Response.Status.ERROR) throw new Error("can't continue");
+	} else if (response.status === Response.Status.ERROR) {
+		logger.error('deploy error', response.data);
+		throw new Error("can't continue");
+	}
 	const content = (await file.read('object')) as content;
 	await file.write({ ...content, ...{ auth, phone } } as content);
 	return response.data as Telegram.Deploy.Response;

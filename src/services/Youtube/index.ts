@@ -1,4 +1,5 @@
 import Axios, { AxiosInstance } from 'axios';
+import Joi from 'joi';
 import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
 import { Analyzer } from '../../Analyzer';
@@ -6,7 +7,9 @@ import { Extractor } from '../Extractor';
 import { Response } from '../Extractor/Response';
 @injectable()
 export class Youtube extends Extractor {
-	private api: AxiosInstance; // En caso de instanciar desde deploy remover readonly
+	protected static deployConfigSchema = Extractor.deployConfigSchema.append({
+		apiKey: Joi.string().max(100).required(),
+	});
 	constructor(@inject('logger') private logger: Logger) {
 		super({
 			id: 'youtube-extractor', // Identificador, solo letras minúsculas y guiones (az-)
@@ -14,6 +17,7 @@ export class Youtube extends Extractor {
 			version: '0.0.0',
 		});
 	}
+	private api: AxiosInstance; // En caso de instanciar desde deploy remover readonly
 	async deploy(
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		config: Youtube.Deploy.Config,
@@ -21,6 +25,15 @@ export class Youtube extends Extractor {
 		options?: Youtube.Deploy.Options,
 	): Promise<Response<null>> {
 		this.logger.verbose('DEPLOY', { config, options });
+
+		const validConfig = Youtube.deployConfigSchema.validate(config);
+		const validOptions = Youtube.deployOptionsSchema.validate(options);
+		if (validConfig.error || validOptions.error)
+			return new Response(this, Response.Status.ERROR, {
+				configError: validConfig.error,
+				optionsError: validOptions.error,
+			} as never);
+
 		const { apiKey } = config;
 		this.api = Axios.create({
 			baseURL: 'https://www.googleapis.com/youtube/v3/', // Base URL,
@@ -30,11 +43,18 @@ export class Youtube extends Extractor {
 		return new Response(this, Response.Status.OK);
 	}
 	async obtain(options: Youtube.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
+		this.logger.verbose('OBTAIN', options);
+
+		const validOptions = Youtube.obtainOptionsSchema.validate(options);
+		if (validOptions.error)
+			return new Response(this, Response.Status.ERROR, {
+				optionsError: validOptions.error,
+			} as never);
+
 		const { metaKey, limit, minSentenceSize } = options;
 		let filtered: Analyzer.input[] = [];
 		const analyzer = new Analyzer(this);
 		//const subComents: string[] = [];
-		this.logger.verbose('OBTAIN', options);
 		let tokenPage = '';
 		// Repeticiones para mas comentarios
 		try {

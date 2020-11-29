@@ -1,4 +1,5 @@
 import Axios, { AxiosInstance } from 'axios';
+import Joi from 'joi';
 import { inject, injectable } from 'tsyringe';
 import tweetParser from 'tweet-parser';
 import { Logger } from 'winston';
@@ -35,6 +36,9 @@ export class Twitter extends Extractor {
 		if (stringParsed.endsWith(' ')) stringParsed = stringParsed.slice(0, -1);
 		return stringParsed;
 	}
+	protected static deployConfigSchema = Extractor.deployConfigSchema.append({
+		bearerToken: Joi.string().required(),
+	});
 	constructor(@inject('logger') private logger: Logger) {
 		super({
 			id: 'twitter-extractor', // Identificador, solo letras minúsculas y guiones (az-)
@@ -49,6 +53,16 @@ export class Twitter extends Extractor {
 		config: Twitter.Deploy.Config,
 		options?: Twitter.Deploy.Options,
 	): Promise<Response<null>> {
+		this.logger.verbose('DEPLOY', { config, options });
+
+		const validConfig = Twitter.deployConfigSchema.validate(config);
+		const validOptions = Twitter.deployOptionsSchema.validate(options);
+		if (validConfig.error || validOptions.error)
+			return new Response(this, Response.Status.ERROR, {
+				configError: validConfig.error,
+				optionsError: validOptions.error,
+			} as never);
+
 		const { bearerToken } = config;
 		this.api = Axios.create({
 			baseURL: 'https://api.twitter.com/2/tweets',
@@ -57,7 +71,6 @@ export class Twitter extends Extractor {
 				Authorization: 'Bearer ' + bearerToken,
 			},
 		});
-		this.logger.verbose('DEPLOY', { config, options });
 		return new Response(this, Response.Status.OK);
 	}
 
@@ -69,8 +82,15 @@ export class Twitter extends Extractor {
 	 * @memberof Twitter
 	 */
 	async obtain(options: Twitter.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
-		const { limit, metaKey, minSentenceSize } = options;
 		this.logger.verbose('OBTAIN', options);
+
+		const validOptions = Twitter.obtainOptionsSchema.validate(options);
+		if (validOptions.error)
+			return new Response(this, Response.Status.ERROR, {
+				optionsError: validOptions.error,
+			} as never);
+
+		const { limit, metaKey, minSentenceSize } = options;
 		let filtered: Analyzer.input[] = [];
 		let tokenPage = '';
 		try {

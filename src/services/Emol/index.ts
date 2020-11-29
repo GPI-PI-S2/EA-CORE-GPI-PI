@@ -7,14 +7,14 @@ import { Response } from '../Extractor/Response';
 
 @injectable()
 export class Emol extends Extractor {
-	static baseParams = {
+	private static baseParams = {
 		action: 'getComments',
 		rootComment: false,
 		order: 'TIME',
 		format: 'json',
 		includePending: false,
 	};
-	private api: AxiosInstance;
+
 	constructor(@inject('logger') private logger: Logger) {
 		super({
 			id: 'emol-extractor', // Identificador, solo letras minúsculas y guiones (az-)
@@ -22,11 +22,22 @@ export class Emol extends Extractor {
 			version: '0.0.0',
 		});
 	}
+	private api: AxiosInstance;
+
 	async deploy(
 		config: Emol.Deploy.Config = {},
 		options: Emol.Deploy.Options = {},
-	): Promise<Response<null>> {
+	): Promise<Response<unknown>> {
 		this.logger.verbose('DEPLOY', { config, options });
+
+		const validConfig = Extractor.deployConfigSchema.validate(config);
+		const validOptions = Extractor.deployOptionsSchema.validate(options);
+		if (validConfig.error || validOptions.error)
+			return new Response(this, Response.Status.ERROR, {
+				configError: validConfig.error,
+				optionsError: validOptions.error,
+			});
+
 		// https://github.com/axios/axios#axios-api
 		this.api = Axios.create({
 			baseURL: 'https://cache-comentarios.ecn.cl/Comments/Api',
@@ -38,6 +49,13 @@ export class Emol extends Extractor {
 	}
 	async obtain(options: Emol.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
 		this.logger.verbose('OBTAIN', { options });
+
+		const validOptions = Extractor.obtainOptionsSchema.validate(options);
+		if (validOptions.error)
+			return new Response(this, Response.Status.ERROR, {
+				optionsError: validOptions.error,
+			} as never);
+
 		const { metaKey: url, limit, minSentenceSize } = options;
 		const analyzer = new Analyzer(this);
 		try {

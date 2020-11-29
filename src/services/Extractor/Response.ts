@@ -10,6 +10,7 @@ export class Response<Data extends unknown> {
 		private _error: any = null,
 	) {
 		this.status = status;
+		if (_error) _data = _error;
 		if (_data instanceof Error) (this.status as Response.Status) = Response.Status.ERROR;
 	}
 	/**
@@ -18,11 +19,16 @@ export class Response<Data extends unknown> {
 	get(): Data {
 		return this._data;
 	}
+	get isError(): boolean {
+		return this.status === Response.Status.ERROR;
+	}
 	get data(): Data {
 		return this._data;
 	}
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	get error(): any {
+	/**
+	 * @deprecated Usar el getter isError para determinar si es error y el getter data para devolver la data
+	 */
+	get error(): unknown {
 		return this._error;
 	}
 }

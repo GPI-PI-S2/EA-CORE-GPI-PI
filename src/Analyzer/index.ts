@@ -3,6 +3,7 @@ import { fromString } from 'html-to-text';
 import LanguageDetect from 'languagedetect';
 import { DBController } from 'src/types/DBController';
 import { container } from 'tsyringe';
+import { Logger } from 'winston';
 import { Extractor } from '../services/Extractor';
 
 export class Analyzer {
@@ -67,6 +68,7 @@ export class Analyzer {
 		return langResult;
 	}
 	constructor(private readonly extractor: Extractor) {}
+	private readonly logger = container.resolve<Logger>('logger');
 	async analyze(
 		input: Analyzer.input[],
 		options: Analyzer.Analyze.Options,
@@ -84,6 +86,9 @@ export class Analyzer {
 			metaKey,
 			result,
 		};
+		this.logger.debug(
+			isDBCAvailable ? '✔️ DB controller is avaialable' : '❌ DB controller is not available',
+		);
 		if (isDBCAvailable) {
 			const DBController = container.resolve<DBController>('DBController');
 			await DBController.connect();

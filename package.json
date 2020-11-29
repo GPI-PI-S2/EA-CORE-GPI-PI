@@ -1,9 +1,9 @@
 {
 	"name": "ea-core-gpi-pi",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"types": "dist/index.d.ts",
 	"main": "dist/index.js",
-	"description": "Extracte contenido de diferentes fuentes y analiza según el modelo <nombre>",
+	"description": "Extrae contenido de diferentes fuentes y analiza según el modelo <nombre>",
 	"scripts": {
 		"postinstall": "tsc --project ./",
 		"build": "tsc -p ./tsconfig.json",
@@ -41,18 +41,19 @@
 	},
 	"dependencies": {
 		"@mtproto/core": "5.1.0",
-		"axios": "^0.21.0",
-		"ea-common-gpi-pi": "github:GPI-PI-S2/EA-COMMON-GPI-PI",
-		"html-to-text": "^6.0.0",
-		"languagedetect": "^2.0.0",
-		"reflect-metadata": "^0.1.13",
-		"tsyringe": "^4.4.0",
-		"tweet-parser": "^0.2.0",
-		"winston": "^3.3.3",
 		"@types/axios": "^0.14.0",
 		"@types/html-to-text": "^5.1.2",
 		"@types/node": "^14.14.7",
+		"axios": "^0.21.0",
+		"ea-common-gpi-pi": "github:GPI-PI-S2/EA-COMMON-GPI-PI",
+		"html-to-text": "^6.0.0",
+		"joi": "^17.3.0",
+		"languagedetect": "^2.0.0",
+		"reflect-metadata": "^0.1.13",
 		"tsconfig-paths": "^3.9.0",
-		"typescript": "^4.0.5"
+		"tsyringe": "^4.4.0",
+		"tweet-parser": "^0.2.0",
+		"typescript": "^4.0.5",
+		"winston": "^3.3.3"
 	}
 }

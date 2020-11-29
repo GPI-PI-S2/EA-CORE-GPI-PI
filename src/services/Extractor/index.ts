@@ -1,7 +1,15 @@
+import Joi from 'joi';
 import { Response } from './Response';
 
 export abstract class Extractor {
 	static readonly version = '0.0.0';
+	protected static deployConfigSchema = Joi.object({});
+	protected static deployOptionsSchema = Joi.object({});
+	protected static obtainOptionsSchema = Joi.object({
+		metaKey: Joi.string().max(250).required(),
+		limit: Joi.number().min(1).max(1000).required(),
+		minSentenceSize: Joi.number().min(1).max(100).optional(),
+	});
 	constructor(private _register: Extractor.Register) {}
 	get register(): Extractor.Register & { extractorVersion: string } {
 		return { ...this._register, extractorVersion: Extractor.version };

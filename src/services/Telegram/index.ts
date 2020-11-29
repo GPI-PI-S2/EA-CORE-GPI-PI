@@ -1,4 +1,5 @@
 import { CError } from 'ea-common-gpi-pi';
+import Joi from 'joi';
 import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
 import { Analyzer } from '../../Analyzer';
@@ -91,7 +92,21 @@ export class Telegram extends Extractor {
 
 		return extractorChats;
 	}
-	private api: Api;
+	protected static deployConfigSchema = Extractor.deployConfigSchema.append({
+		apiId: Joi.number().max(1e7).optional(),
+		apiHash: Joi.string().optional(),
+	});
+	protected static deployOptionsSchema = Extractor.deployOptionsSchema.append({
+		phone: Joi.string().required(),
+		code: Joi.number().max(1e6).optional(),
+		codeHash: Joi.string().optional(),
+		chatsLimit: Joi.number().min(1).max(100).optional(),
+	});
+	protected static obtainOptionsSchema = Extractor.obtainOptionsSchema.append({
+		chatId: Joi.number().required(),
+		accessHash: Joi.string().required(),
+		type: Joi.string().required(),
+	});
 	constructor(@inject('logger') private logger: Logger) {
 		super({
 			id: 'telegram-extractor', // Identificador, solo letras minúsculas y guiones (az-)
@@ -99,12 +114,22 @@ export class Telegram extends Extractor {
 			version: '0.0.0',
 		});
 	}
+	private api: Api;
 	async deploy(
-		config: Telegram.Deploy.Config,
+		config: Required<Telegram.Deploy.Config>,
 		options: Telegram.Deploy.Options,
 	): Promise<Response<Telegram.Deploy.PendingResponse | { chats: Telegram.Deploy.chat[] }>> {
 		try {
 			this.logger.verbose('DEPLOY', { config, options });
+
+			const validConfig = Telegram.deployConfigSchema.validate(config);
+			const validOptions = Telegram.deployOptionsSchema.validate(options);
+			if (validConfig.error || validOptions.error)
+				return new Response(this, Response.Status.ERROR, {
+					configError: validConfig.error,
+					optionsError: validOptions.error,
+				} as never);
+
 			this.api = new Api(config);
 			const sigIn = await this.api.sigIn(options);
 			if (!sigIn.status) {
@@ -129,6 +154,13 @@ export class Telegram extends Extractor {
 	}
 	async obtain(options: Telegram.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
 		this.logger.verbose('OBTAIN', { options });
+
+		const validOptions = Telegram.obtainOptionsSchema.validate(options);
+		if (validOptions.error)
+			return new Response(this, Response.Status.ERROR, {
+				optionsError: validOptions.error,
+			} as never);
+
 		const { minSentenceSize, metaKey } = options;
 		const peer = Telegram.parsePeer(options);
 		const response = await this.api.getHistory({ peer, limit: options.limit, max_id: 0 });
@@ -160,8 +192,8 @@ export namespace Telegram {
 			name: string;
 		};
 		export interface Config extends Extractor.Deploy.Config {
-			apiId: number;
-			apiHash: string;
+			apiId?: number;
+			apiHash?: string;
 		}
 		export interface Options extends Extractor.Deploy.Options {
 			phone: string;

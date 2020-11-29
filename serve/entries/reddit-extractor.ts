@@ -11,14 +11,19 @@ export default async (extractor: Reddit) => {
 	const result = await extractor.obtain({
 		postId: 'jmlgaw',
 		subReddit: 'chile',
-		metaKey: '',
+		metaKey: 'jmlgaw',
 		limit: 1000,
 		minSentenceSize: 3,
 	});
 	/* 	logger.debug('result get:', result.get());
-	 */ const file = new File('reddit.json');
+	 */
+	if (result.isError) {
+		logger.error('obtain error', result.data);
+		return;
+	}
 	const data = result.data.result.map((content) => content.input.content);
 	const total = data.length;
+	const file = new File('reddit.json');
 	await file.write({ data, total });
 	logger.info('response ok');
 };

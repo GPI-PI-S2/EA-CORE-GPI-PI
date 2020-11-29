@@ -1,4 +1,5 @@
 import Axios, { AxiosInstance } from 'axios';
+import Joi from 'joi';
 import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
 import { Analyzer } from '../../Analyzer';
@@ -7,6 +8,10 @@ import { Response } from '../Extractor/Response';
 
 @injectable()
 export class Reddit extends Extractor {
+	protected static obtainOptionsSchema = Extractor.obtainOptionsSchema.append({
+		subReddit: Joi.string().required(),
+		postId: Joi.string().required(),
+	});
 	constructor(@inject('logger') private logger: Logger) {
 		super({
 			id: 'reddit-extractor', // Identificador, solo letras minúsculas y guiones (az-)
@@ -40,8 +45,17 @@ export class Reddit extends Extractor {
 		config?: Reddit.Deploy.Config,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		options?: Reddit.Deploy.Options,
-	): Promise<Response<null>> {
+	): Promise<Response<unknown>> {
 		this.logger.verbose('DEPLOY', { config, options });
+
+		const validConfig = Extractor.deployConfigSchema.validate(config);
+		const validOptions = Extractor.deployOptionsSchema.validate(options);
+		if (validConfig.error || validOptions.error)
+			return new Response(this, Response.Status.ERROR, {
+				configError: validConfig.error,
+				optionsError: validOptions.error,
+			});
+
 		this.api = Axios.create({
 			baseURL: 'https://www.reddit.com', // Base URL,
 			responseType: 'json',
@@ -55,6 +69,13 @@ export class Reddit extends Extractor {
 		const subRedditParam = subReddit ? `/r/${subReddit}` : '';
 		const metaKey = JSON.stringify({ subReddit, postId });
 		this.logger.verbose('OBTAIN', { ...options, ...{ metaKey } });
+
+		const validOptions = Reddit.obtainOptionsSchema.validate(options);
+		if (validOptions.error)
+			return new Response(this, Response.Status.ERROR, {
+				optionsError: validOptions.error,
+			} as never);
+
 		try {
 			const response = await this.api.get<Reddit.Data>(
 				`${subRedditParam}/comments/${postId}.json`,
