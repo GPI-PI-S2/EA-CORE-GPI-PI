@@ -14,7 +14,7 @@ export class Youtube extends Extractor {
 		super({
 			id: 'youtube-extractor', // Identificador, solo letras minúsculas y guiones (az-)
 			name: 'Youtube', // Nombre legible para humanos
-			version: '0.0.0',
+			version: '1.0.0',
 		});
 	}
 	private api: AxiosInstance; // En caso de instanciar desde deploy remover readonly
@@ -24,14 +24,17 @@ export class Youtube extends Extractor {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		options?: Youtube.Deploy.Options,
 	): Promise<Response<null>> {
-		this.logger.verbose('DEPLOY', { config, options });
+		this.logger.verbose(`DEPLOY ${this.register.id} v${this.register.version}`, {
+			config,
+			options,
+		});
 
 		const validConfig = Youtube.deployConfigSchema.validate(config);
 		const validOptions = Youtube.deployOptionsSchema.validate(options);
 		if (validConfig.error || validOptions.error)
 			return new Response(this, Response.Status.ERROR, {
-				configError: validConfig.error,
-				optionsError: validOptions.error,
+				configError: validConfig.error.details,
+				optionsError: validOptions.error.details,
 			} as never);
 
 		const { apiKey } = config;
@@ -43,12 +46,12 @@ export class Youtube extends Extractor {
 		return new Response(this, Response.Status.OK);
 	}
 	async obtain(options: Youtube.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
-		this.logger.verbose('OBTAIN', options);
+		this.logger.verbose(`OBTAIN ${this.register.id} v${this.register.version}`, options);
 
 		const validOptions = Youtube.obtainOptionsSchema.validate(options);
 		if (validOptions.error)
 			return new Response(this, Response.Status.ERROR, {
-				optionsError: validOptions.error,
+				optionsError: validOptions.error.details,
 			} as never);
 
 		const { metaKey, limit, minSentenceSize } = options;
@@ -91,7 +94,7 @@ export class Youtube extends Extractor {
 			const analysis = await analyzer.analyze(filtered, { metaKey });
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
-			this.logger.debug('OBTAIN error', error);
+			this.logger.debug(`OBTAIN error ${this.register.id} v${this.register.version}`, error);
 			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR, null, error);
 		}
 	}

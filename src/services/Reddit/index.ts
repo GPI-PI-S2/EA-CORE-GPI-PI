@@ -16,7 +16,7 @@ export class Reddit extends Extractor {
 		super({
 			id: 'reddit-extractor', // Identificador, solo letras minúsculas y guiones (az-)
 			name: 'Reddit', // Nombre legible para humanos
-			version: '0.0.1',
+			version: '1.0.0',
 		});
 	}
 	private api: AxiosInstance; // En caso de instanciar desde deploy remover readonly
@@ -46,14 +46,17 @@ export class Reddit extends Extractor {
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		options?: Reddit.Deploy.Options,
 	): Promise<Response<unknown>> {
-		this.logger.verbose('DEPLOY', { config, options });
+		this.logger.verbose(`DEPLOY ${this.register.id} v${this.register.version}`, {
+			config,
+			options,
+		});
 
 		const validConfig = Extractor.deployConfigSchema.validate(config);
 		const validOptions = Extractor.deployOptionsSchema.validate(options);
 		if (validConfig.error || validOptions.error)
 			return new Response(this, Response.Status.ERROR, {
-				configError: validConfig.error,
-				optionsError: validOptions.error,
+				configError: validConfig.error.details,
+				optionsError: validOptions.error.details,
 			});
 
 		this.api = Axios.create({
@@ -68,12 +71,15 @@ export class Reddit extends Extractor {
 		const { limit, minSentenceSize, subReddit, postId } = options;
 		const subRedditParam = subReddit ? `/r/${subReddit}` : '';
 		const metaKey = JSON.stringify({ subReddit, postId });
-		this.logger.verbose('OBTAIN', { ...options, ...{ metaKey } });
+		this.logger.verbose(`OBTAIN ${this.register.id} v${this.register.version}`, {
+			...options,
+			...{ metaKey },
+		});
 
 		const validOptions = Reddit.obtainOptionsSchema.validate(options);
 		if (validOptions.error)
 			return new Response(this, Response.Status.ERROR, {
-				optionsError: validOptions.error,
+				optionsError: validOptions.error.details,
 			} as never);
 
 		try {
@@ -97,7 +103,7 @@ export class Reddit extends Extractor {
 			const analysis = await analyzer.analyze(filtered, { metaKey });
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
-			this.logger.debug('OBTAIN error', error);
+			this.logger.debug(`OBTAIN error ${this.register.id} v${this.register.version}`, error);
 			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR, null, error);
 		}
 	}

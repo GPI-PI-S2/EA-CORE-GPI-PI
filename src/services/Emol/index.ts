@@ -19,7 +19,7 @@ export class Emol extends Extractor {
 		super({
 			id: 'emol-extractor', // Identificador, solo letras minúsculas y guiones (az-)
 			name: 'Emol', // Nombre legible para humanos
-			version: '0.0.0',
+			version: '1.0.0',
 		});
 	}
 	private api: AxiosInstance;
@@ -28,14 +28,17 @@ export class Emol extends Extractor {
 		config: Emol.Deploy.Config = {},
 		options: Emol.Deploy.Options = {},
 	): Promise<Response<unknown>> {
-		this.logger.verbose('DEPLOY', { config, options });
+		this.logger.verbose(`DEPLOY ${this.register.id} v${this.register.version}`, {
+			config,
+			options,
+		});
 
 		const validConfig = Extractor.deployConfigSchema.validate(config);
 		const validOptions = Extractor.deployOptionsSchema.validate(options);
 		if (validConfig.error || validOptions.error)
 			return new Response(this, Response.Status.ERROR, {
-				configError: validConfig.error,
-				optionsError: validOptions.error,
+				configError: validConfig.error.details,
+				optionsError: validOptions.error.details,
 			});
 
 		// https://github.com/axios/axios#axios-api
@@ -48,12 +51,11 @@ export class Emol extends Extractor {
 		return new Response(this, Response.Status.OK);
 	}
 	async obtain(options: Emol.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
-		this.logger.verbose('OBTAIN', { options });
-
+		this.logger.verbose(`OBTAIN ${this.register.id} v${this.register.version}`, options);
 		const validOptions = Extractor.obtainOptionsSchema.validate(options);
 		if (validOptions.error)
 			return new Response(this, Response.Status.ERROR, {
-				optionsError: validOptions.error,
+				optionsError: validOptions.error.details,
 			} as never);
 
 		const { metaKey: url, limit, minSentenceSize } = options;

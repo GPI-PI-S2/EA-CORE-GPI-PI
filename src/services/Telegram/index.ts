@@ -111,7 +111,7 @@ export class Telegram extends Extractor {
 		super({
 			id: 'telegram-extractor', // Identificador, solo letras minúsculas y guiones (az-)
 			name: 'Telegram', // Nombre legible para humanos
-			version: '0.0.0',
+			version: '1.0.0',
 		});
 	}
 	private api: Api;
@@ -120,14 +120,17 @@ export class Telegram extends Extractor {
 		options: Telegram.Deploy.Options,
 	): Promise<Response<Telegram.Deploy.PendingResponse | { chats: Telegram.Deploy.chat[] }>> {
 		try {
-			this.logger.verbose('DEPLOY', { config, options });
+			this.logger.verbose(`DEPLOY ${this.register.id} v${this.register.version}`, {
+				config,
+				options,
+			});
 
 			const validConfig = Telegram.deployConfigSchema.validate(config);
 			const validOptions = Telegram.deployOptionsSchema.validate(options);
 			if (validConfig.error || validOptions.error)
 				return new Response(this, Response.Status.ERROR, {
-					configError: validConfig.error,
-					optionsError: validOptions.error,
+					configError: validConfig.error.details,
+					optionsError: validOptions.error.details,
 				} as never);
 
 			this.api = new Api(config);
@@ -153,26 +156,32 @@ export class Telegram extends Extractor {
 		}
 	}
 	async obtain(options: Telegram.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
-		this.logger.verbose('OBTAIN', { options });
+		this.logger.verbose(`OBTAIN ${this.register.id} v${this.register.version}`, options);
 
 		const validOptions = Telegram.obtainOptionsSchema.validate(options);
 		if (validOptions.error)
 			return new Response(this, Response.Status.ERROR, {
-				optionsError: validOptions.error,
+				optionsError: validOptions.error.details,
 			} as never);
-
-		const { minSentenceSize, metaKey } = options;
-		const peer = Telegram.parsePeer(options);
-		const response = await this.api.getHistory({ peer, limit: options.limit, max_id: 0 });
-		//const lastId: number = response.messages.length > 0 ? response.messages[0].id : null;
-		const RMessages: Analyzer.input[] = response.messages.map((m) => ({ content: m.message }));
-		const filteredMessages = RMessages.filter((message) =>
-			Analyzer.filter(message, { minSentenceSize }),
-		);
-		this.logger.silly('mensajes', filteredMessages);
-		const analyzer = new Analyzer(this);
-		const analysis = await analyzer.analyze(filteredMessages, { metaKey });
-		return new Response(this, Response.Status.OK, analysis);
+		try {
+			const { minSentenceSize, metaKey } = options;
+			const peer = Telegram.parsePeer(options);
+			const response = await this.api.getHistory({ peer, limit: options.limit, max_id: 0 });
+			//const lastId: number = response.messages.length > 0 ? response.messages[0].id : null;
+			const RMessages: Analyzer.input[] = response.messages.map((m) => ({
+				content: m.message,
+			}));
+			const filteredMessages = RMessages.filter((message) =>
+				Analyzer.filter(message, { minSentenceSize }),
+			);
+			this.logger.silly('mensajes', filteredMessages);
+			const analyzer = new Analyzer(this);
+			const analysis = await analyzer.analyze(filteredMessages, { metaKey });
+			return new Response(this, Response.Status.OK, analysis);
+		} catch (error) {
+			this.logger.silly('OBTAIN error', error);
+			return new Response(this, Response.Status.ERROR, null, error);
+		}
 	}
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async unitaryObtain(_options: Telegram.UnitaryObtain.Options): Promise<Response<unknown>> {

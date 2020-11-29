@@ -43,7 +43,7 @@ export class Twitter extends Extractor {
 		super({
 			id: 'twitter-extractor', // Identificador, solo letras minúsculas y guiones (az-)
 			name: 'Twitter', // Nombre legible para humanos
-			version: '0.0.0',
+			version: '1.0.0',
 		});
 	}
 	private api: AxiosInstance; // En caso de instanciar desde deploy remover readonly
@@ -53,14 +53,17 @@ export class Twitter extends Extractor {
 		config: Twitter.Deploy.Config,
 		options?: Twitter.Deploy.Options,
 	): Promise<Response<null>> {
-		this.logger.verbose('DEPLOY', { config, options });
+		this.logger.verbose(`DEPLOY ${this.register.id} v${this.register.version}`, {
+			config,
+			options,
+		});
 
 		const validConfig = Twitter.deployConfigSchema.validate(config);
 		const validOptions = Twitter.deployOptionsSchema.validate(options);
 		if (validConfig.error || validOptions.error)
 			return new Response(this, Response.Status.ERROR, {
-				configError: validConfig.error,
-				optionsError: validOptions.error,
+				configError: validConfig.error.details,
+				optionsError: validOptions.error.details,
 			} as never);
 
 		const { bearerToken } = config;
@@ -82,12 +85,11 @@ export class Twitter extends Extractor {
 	 * @memberof Twitter
 	 */
 	async obtain(options: Twitter.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
-		this.logger.verbose('OBTAIN', options);
-
+		this.logger.verbose(`OBTAIN ${this.register.id} v${this.register.version}`, options);
 		const validOptions = Twitter.obtainOptionsSchema.validate(options);
 		if (validOptions.error)
 			return new Response(this, Response.Status.ERROR, {
-				optionsError: validOptions.error,
+				optionsError: validOptions.error.details,
 			} as never);
 
 		const { limit, metaKey, minSentenceSize } = options;
@@ -120,7 +122,7 @@ export class Twitter extends Extractor {
 			const analysis = await analyzer.analyze(filtered, { metaKey });
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
-			this.logger.debug('OBTAIN error', error);
+			this.logger.debug(`OBTAIN error ${this.register.id} v${this.register.version}`, error);
 			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR, null, error);
 		}
 	}
