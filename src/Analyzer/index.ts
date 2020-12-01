@@ -61,6 +61,7 @@ export class Analyzer {
 		const content: string = input ? input.content : null;
 		if (!empty && !content) return false;
 		if (content.split(' ').length < minSentenceSize) return false;
+		if (content.length > 511) return false;
 		const lngDetector = new LanguageDetect();
 		lngDetector.setLanguageType('iso2');
 		const result = lngDetector.detect(content);
@@ -77,8 +78,7 @@ export class Analyzer {
 		const extractor = this.extractor.register.id;
 		const isDBCAvailable = container.isRegistered<DBController>('DBController');
 		const result = input.map((input) => ({
-			// Tamaño máximo para ser ingresado en la DB
-			input: { content: input.content.slice(0, 511) },
+			input,
 			sentiments: Analyzer.newResult(),
 		}));
 		const response: Analyzer.Analysis = {
