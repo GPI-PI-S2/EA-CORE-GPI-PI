@@ -86,6 +86,7 @@ export class Analyzer {
 			metaKey,
 			result,
 		};
+		console.log(container);
 		this.logger.debug(
 			isDBCAvailable ? '✔️ DB controller is avaialable' : '❌ DB controller is not available',
 		);
