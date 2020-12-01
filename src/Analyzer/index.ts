@@ -77,7 +77,8 @@ export class Analyzer {
 		const extractor = this.extractor.register.id;
 		const isDBCAvailable = container.isRegistered<DBController>('DBController');
 		const result = input.map((input) => ({
-			input,
+			// Tamaño máximo para ser ingresado en la DB
+			input: { content: input.content.slice(0, 511) },
 			sentiments: Analyzer.newResult(),
 		}));
 		const response: Analyzer.Analysis = {
@@ -86,7 +87,6 @@ export class Analyzer {
 			metaKey,
 			result,
 		};
-		console.log(container);
 		this.logger.debug(
 			isDBCAvailable ? '✔️ DB controller is avaialable' : '❌ DB controller is not available',
 		);
