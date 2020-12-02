@@ -91,9 +91,11 @@ export class Analyzer {
 			isDBCAvailable ? '✔️ DB controller is avaialable' : '❌ DB controller is not available',
 		);
 		if (isDBCAvailable) {
+			this.logger.debug('Adding to DB...');
 			const DBController = container.resolve<DBController>('DBController');
 			await DBController.connect();
 			await DBController.insert(response, false);
+			this.logger.debug('Added to DB...');
 		}
 		return response;
 	}

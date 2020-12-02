@@ -15,7 +15,7 @@ export default async (extractor: Twitter) => {
 		return;
 	}
 	let hashtag = '';
-	let limit = 1000;
+	let limit = 100;
 	while (!hashtag) {
 		hashtag = await Readline.read('Para buscar ingrese un término');
 	}
