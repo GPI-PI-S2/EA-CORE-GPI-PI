@@ -1,4 +1,5 @@
 import Axios, { AxiosInstance } from 'axios';
+import Joi from 'joi';
 import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
 import { Analyzer } from '../../Analyzer';
@@ -7,11 +8,15 @@ import { Response } from '../Extractor/Response';
 
 @injectable()
 export class Reddit extends Extractor {
+	protected static obtainOptionsSchema = Extractor.obtainOptionsSchema.append({
+		subReddit: Joi.string().required(),
+		postId: Joi.string().required(),
+	});
 	constructor(@inject('logger') private logger: Logger) {
 		super({
 			id: 'reddit-extractor', // Identificador, solo letras minúsculas y guiones (az-)
 			name: 'Reddit', // Nombre legible para humanos
-			version: '0.0.1',
+			version: '1.0.0',
 		});
 	}
 	private api: AxiosInstance; // En caso de instanciar desde deploy remover readonly
@@ -40,8 +45,20 @@ export class Reddit extends Extractor {
 		config?: Reddit.Deploy.Config,
 		// eslint-disable-next-line @typescript-eslint/no-unused-vars
 		options?: Reddit.Deploy.Options,
-	): Promise<Response<null>> {
-		this.logger.verbose('DEPLOY', { config, options });
+	): Promise<Response<unknown>> {
+		this.logger.verbose(`DEPLOY ${this.register.id} v${this.register.version}`, {
+			config,
+			options,
+		});
+
+		const validConfig = Extractor.deployConfigSchema.validate(config);
+		const validOptions = Extractor.deployOptionsSchema.validate(options);
+		if (validConfig.error || validOptions.error)
+			return new Response(this, Response.Status.ERROR, {
+				configError: validConfig.error ? validConfig.error.message : undefined,
+				optionsError: validOptions.error ? validOptions.error.message : undefined,
+			});
+
 		this.api = Axios.create({
 			baseURL: 'https://www.reddit.com', // Base URL,
 			responseType: 'json',
@@ -54,7 +71,17 @@ export class Reddit extends Extractor {
 		const { limit, minSentenceSize, subReddit, postId } = options;
 		const subRedditParam = subReddit ? `/r/${subReddit}` : '';
 		const metaKey = JSON.stringify({ subReddit, postId });
-		this.logger.verbose('OBTAIN', { ...options, ...{ metaKey } });
+		this.logger.verbose(`OBTAIN ${this.register.id} v${this.register.version}`, {
+			...options,
+			...{ metaKey },
+		});
+
+		const validOptions = Reddit.obtainOptionsSchema.validate(options);
+		if (validOptions.error)
+			return new Response(this, Response.Status.ERROR, {
+				optionsError: validOptions.error ? validOptions.error.message : undefined,
+			} as never);
+
 		try {
 			const response = await this.api.get<Reddit.Data>(
 				`${subRedditParam}/comments/${postId}.json`,
@@ -70,13 +97,13 @@ export class Reddit extends Extractor {
 				.filter((message) =>
 					Analyzer.filter(message, { minSentenceSize, assurance: 0.26 }),
 				);
-			this.logger.silly('filtered:', filtered);
-			this.logger.silly('length:', filtered.length);
+
+			this.logger.silly(`length: ${filtered.length}`);
 			const analyzer = new Analyzer(this);
 			const analysis = await analyzer.analyze(filtered, { metaKey });
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
-			this.logger.debug('OBTAIN error', error);
+			this.logger.debug(`OBTAIN error ${this.register.id} v${this.register.version}`, error);
 			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR, null, error);
 		}
 	}

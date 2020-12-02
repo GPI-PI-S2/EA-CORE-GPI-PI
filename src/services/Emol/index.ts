@@ -7,26 +7,40 @@ import { Response } from '../Extractor/Response';
 
 @injectable()
 export class Emol extends Extractor {
-	static baseParams = {
+	private static baseParams = {
 		action: 'getComments',
 		rootComment: false,
 		order: 'TIME',
 		format: 'json',
 		includePending: false,
 	};
-	private api: AxiosInstance;
+
 	constructor(@inject('logger') private logger: Logger) {
 		super({
 			id: 'emol-extractor', // Identificador, solo letras minúsculas y guiones (az-)
 			name: 'Emol', // Nombre legible para humanos
-			version: '0.0.0',
+			version: '1.0.0',
 		});
 	}
+	private api: AxiosInstance;
+
 	async deploy(
 		config: Emol.Deploy.Config = {},
 		options: Emol.Deploy.Options = {},
-	): Promise<Response<null>> {
-		this.logger.verbose('DEPLOY', { config, options });
+	): Promise<Response<unknown>> {
+		this.logger.verbose(`DEPLOY ${this.register.id} v${this.register.version}`, {
+			config,
+			options,
+		});
+
+		const validConfig = Extractor.deployConfigSchema.validate(config);
+		const validOptions = Extractor.deployOptionsSchema.validate(options);
+		if (validConfig.error || validOptions.error)
+			return new Response(this, Response.Status.ERROR, {
+				configError: validConfig.error ? validConfig.error.message : undefined,
+				optionsError: validOptions.error ? validOptions.error.message : undefined,
+			});
+
 		// https://github.com/axios/axios#axios-api
 		this.api = Axios.create({
 			baseURL: 'https://cache-comentarios.ecn.cl/Comments/Api',
@@ -37,7 +51,13 @@ export class Emol extends Extractor {
 		return new Response(this, Response.Status.OK);
 	}
 	async obtain(options: Emol.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
-		this.logger.verbose('OBTAIN', { options });
+		this.logger.verbose(`OBTAIN ${this.register.id} v${this.register.version}`, options);
+		const validOptions = Extractor.obtainOptionsSchema.validate(options);
+		if (validOptions.error)
+			return new Response(this, Response.Status.ERROR, {
+				optionsError: validOptions.error ? validOptions.error.message : undefined,
+			} as never);
+
 		const { metaKey: url, limit, minSentenceSize } = options;
 		const analyzer = new Analyzer(this);
 		try {
@@ -58,8 +78,7 @@ export class Emol extends Extractor {
 				.map((comment) => Analyzer.htmlParse(comment))
 				.filter((comment) => Analyzer.filter(comment, { minSentenceSize, assurance: 0.2 }));
 
-			this.logger.silly('filtered:', filtered);
-			this.logger.silly('length:', filtered.length);
+			this.logger.silly(`length: ${filtered.length}`);
 			const analysis = await analyzer.analyze(filtered, { metaKey: url });
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {

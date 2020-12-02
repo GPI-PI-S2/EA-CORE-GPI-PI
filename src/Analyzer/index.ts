@@ -3,6 +3,7 @@ import { fromString } from 'html-to-text';
 import LanguageDetect from 'languagedetect';
 import { DBController } from 'src/types/DBController';
 import { container } from 'tsyringe';
+import { Logger } from 'winston';
 import { Extractor } from '../services/Extractor';
 
 export class Analyzer {
@@ -60,6 +61,7 @@ export class Analyzer {
 		const content: string = input ? input.content : null;
 		if (!empty && !content) return false;
 		if (content.split(' ').length < minSentenceSize) return false;
+		if (content.length > 511) return false;
 		const lngDetector = new LanguageDetect();
 		lngDetector.setLanguageType('iso2');
 		const result = lngDetector.detect(content);
@@ -67,6 +69,7 @@ export class Analyzer {
 		return langResult;
 	}
 	constructor(private readonly extractor: Extractor) {}
+	private readonly logger = container.resolve<Logger>('logger');
 	async analyze(
 		input: Analyzer.input[],
 		options: Analyzer.Analyze.Options,
@@ -84,10 +87,15 @@ export class Analyzer {
 			metaKey,
 			result,
 		};
+		this.logger.debug(
+			isDBCAvailable ? '✔️ DB controller is avaialable' : '❌ DB controller is not available',
+		);
 		if (isDBCAvailable) {
+			this.logger.debug('Adding to DB...');
 			const DBController = container.resolve<DBController>('DBController');
 			await DBController.connect();
 			await DBController.insert(response, false);
+			this.logger.debug('Added to DB...');
 		}
 		return response;
 	}

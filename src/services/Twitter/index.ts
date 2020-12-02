@@ -1,4 +1,5 @@
 import Axios, { AxiosInstance } from 'axios';
+import Joi from 'joi';
 import { inject, injectable } from 'tsyringe';
 import tweetParser from 'tweet-parser';
 import { Logger } from 'winston';
@@ -35,11 +36,14 @@ export class Twitter extends Extractor {
 		if (stringParsed.endsWith(' ')) stringParsed = stringParsed.slice(0, -1);
 		return stringParsed;
 	}
+	protected static deployConfigSchema = Extractor.deployConfigSchema.append({
+		bearerToken: Joi.string().required(),
+	});
 	constructor(@inject('logger') private logger: Logger) {
 		super({
 			id: 'twitter-extractor', // Identificador, solo letras minúsculas y guiones (az-)
 			name: 'Twitter', // Nombre legible para humanos
-			version: '0.0.0',
+			version: '1.0.0',
 		});
 	}
 	private api: AxiosInstance; // En caso de instanciar desde deploy remover readonly
@@ -49,6 +53,19 @@ export class Twitter extends Extractor {
 		config: Twitter.Deploy.Config,
 		options?: Twitter.Deploy.Options,
 	): Promise<Response<null>> {
+		this.logger.verbose(`DEPLOY ${this.register.id} v${this.register.version}`, {
+			config,
+			options,
+		});
+
+		const validConfig = Twitter.deployConfigSchema.validate(config);
+		const validOptions = Twitter.deployOptionsSchema.validate(options);
+		if (validConfig.error || validOptions.error)
+			return new Response(this, Response.Status.ERROR, {
+				configError: validConfig.error ? validConfig.error.message : undefined,
+				optionsError: validOptions.error ? validOptions.error.message : undefined,
+			} as never);
+
 		const { bearerToken } = config;
 		this.api = Axios.create({
 			baseURL: 'https://api.twitter.com/2/tweets',
@@ -57,7 +74,6 @@ export class Twitter extends Extractor {
 				Authorization: 'Bearer ' + bearerToken,
 			},
 		});
-		this.logger.verbose('DEPLOY', { config, options });
 		return new Response(this, Response.Status.OK);
 	}
 
@@ -69,8 +85,14 @@ export class Twitter extends Extractor {
 	 * @memberof Twitter
 	 */
 	async obtain(options: Twitter.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
+		this.logger.verbose(`OBTAIN ${this.register.id} v${this.register.version}`, options);
+		const validOptions = Twitter.obtainOptionsSchema.validate(options);
+		if (validOptions.error)
+			return new Response(this, Response.Status.ERROR, {
+				optionsError: validOptions.error ? validOptions.error.message : undefined,
+			} as never);
+
 		const { limit, metaKey, minSentenceSize } = options;
-		this.logger.verbose('OBTAIN', options);
 		let filtered: Analyzer.input[] = [];
 		let tokenPage = '';
 		try {
@@ -94,13 +116,13 @@ export class Twitter extends Extractor {
 			}
 			const resultLength = filtered.length;
 			if (resultLength > limit) filtered = filtered.slice(resultLength - limit);
-			this.logger.silly('filtered:', filtered);
-			this.logger.silly('length:', filtered.length);
+
+			this.logger.silly(`length: ${filtered.length}`);
 			const analyzer = new Analyzer(this);
 			const analysis = await analyzer.analyze(filtered, { metaKey });
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
-			this.logger.debug('OBTAIN error', error);
+			this.logger.debug(`OBTAIN error ${this.register.id} v${this.register.version}`, error);
 			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR, null, error);
 		}
 	}

@@ -29,7 +29,7 @@ export class File {
 		if (as === 'string') return content as any;
 		return JSON.parse(content);
 	}
-	async write(content: string | object) {
+	async write(content: string | Record<string, unknown>) {
 		if (isObject(content)) content = JSON.stringify(content);
 		await fs.promises.writeFile(this.filepath, content as string);
 		return;

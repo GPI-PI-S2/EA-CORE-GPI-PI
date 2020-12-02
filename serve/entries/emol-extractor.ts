@@ -25,9 +25,11 @@ export default async (extractor: Emol) => {
 	await extractor.deploy();
 	const url = await getURL();
 	const result = await extractor.obtain({ limit: 1000, metaKey: url });
-
-	/* 	logger.debug('result get:', result.get());
-	 */ const file = new File('emol.json');
+	if (result.isError) {
+		logger.error('obtain error', result.data);
+		return;
+	}
+	const file = new File('emol.json');
 	const data = result.data.result.map((content) => content.input.content);
 	const total = data.length;
 	await file.write({ data, total });
