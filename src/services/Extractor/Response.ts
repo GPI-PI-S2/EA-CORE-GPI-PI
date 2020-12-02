@@ -10,7 +10,7 @@ export class Response<Data extends unknown> {
 		private _error: any = null,
 	) {
 		this.status = status;
-		if (_error !== null) _data = _error;
+		if (_error !== null) this._data = _error;
 		if (_data instanceof Error) (this.status as Response.Status) = Response.Status.ERROR;
 	}
 	/**
