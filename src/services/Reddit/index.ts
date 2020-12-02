@@ -97,8 +97,8 @@ export class Reddit extends Extractor {
 				.filter((message) =>
 					Analyzer.filter(message, { minSentenceSize, assurance: 0.26 }),
 				);
-			this.logger.silly('filtered:', filtered);
-			this.logger.silly('length:', filtered.length);
+
+			this.logger.silly(`length: ${filtered.length}`);
 			const analyzer = new Analyzer(this);
 			const analysis = await analyzer.analyze(filtered, { metaKey });
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);

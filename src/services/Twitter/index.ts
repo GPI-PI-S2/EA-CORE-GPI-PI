@@ -116,8 +116,8 @@ export class Twitter extends Extractor {
 			}
 			const resultLength = filtered.length;
 			if (resultLength > limit) filtered = filtered.slice(resultLength - limit);
-			this.logger.silly('filtered:', filtered);
-			this.logger.silly('length:', filtered.length);
+
+			this.logger.silly(`length: ${filtered.length}`);
 			const analyzer = new Analyzer(this);
 			const analysis = await analyzer.analyze(filtered, { metaKey });
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);

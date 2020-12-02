@@ -78,8 +78,7 @@ export class Emol extends Extractor {
 				.map((comment) => Analyzer.htmlParse(comment))
 				.filter((comment) => Analyzer.filter(comment, { minSentenceSize, assurance: 0.2 }));
 
-			this.logger.silly('filtered:', filtered);
-			this.logger.silly('length:', filtered.length);
+			this.logger.silly(`length: ${filtered.length}`);
 			const analysis = await analyzer.analyze(filtered, { metaKey: url });
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {

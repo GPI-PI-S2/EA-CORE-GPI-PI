@@ -174,7 +174,7 @@ export class Telegram extends Extractor {
 			const filteredMessages = RMessages.filter((message) =>
 				Analyzer.filter(message, { minSentenceSize }),
 			);
-			this.logger.silly('mensajes', filteredMessages);
+			this.logger.silly(`length: ${filteredMessages.length}`);
 			const analyzer = new Analyzer(this);
 			const analysis = await analyzer.analyze(filteredMessages, { metaKey });
 			return new Response(this, Response.Status.OK, analysis);

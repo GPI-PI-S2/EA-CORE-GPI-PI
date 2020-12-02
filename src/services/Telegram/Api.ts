@@ -91,7 +91,7 @@ export class Api {
 				limit,
 				offset_peer: { _: 'inputPeerEmpty' },
 			})) as Api.GetDialogs.Response;
-			this.logger.silly('Dialogos obtenidos', response);
+			//this.logger.silly('Dialogos obtenidos', response);
 			return response;
 		} catch (error) {
 			const apiError: Api.Error = error;

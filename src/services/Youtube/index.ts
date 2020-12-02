@@ -62,7 +62,7 @@ export class Youtube extends Extractor {
 		// Repeticiones para mas comentarios
 		try {
 			while (tokenPage != undefined) {
-				this.logger.info('pidiendo->', tokenPage);
+				this.logger.silly('pidiendo->', tokenPage);
 				const response = await this.api.get<Youtube.CommentThreads>('commentThreads', {
 					params: {
 						videoId: metaKey,
@@ -71,7 +71,7 @@ export class Youtube extends Extractor {
 						textFormat: 'plainText',
 					},
 				});
-				this.logger.info('recibido');
+				this.logger.silly('recibido');
 				filtered = filtered.concat(
 					response.data.items
 						.map((comment) =>
@@ -89,8 +89,8 @@ export class Youtube extends Extractor {
 					break;
 				}
 			}
-			this.logger.silly('filtered:', filtered);
-			this.logger.silly('length:', filtered.length);
+
+			this.logger.silly(`length: ${filtered.length}`);
 			const analysis = await analyzer.analyze(filtered, { metaKey });
 			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
