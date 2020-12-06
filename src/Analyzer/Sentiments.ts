@@ -6600,7 +6600,27 @@ export class Sentiments {
 			},
 		},
 	];
+
+	constructor(private input: string) {}
+	calc(): Sentiments.list {
+		const list = this.getBestFit(this.input);
+
+		return list.reduce(this.concatSents, Sentiments.list);
+	}
 	private readonly gramType = 2;
+
+	private getBestFit(input: string): Sentiments.list[] {
+		const tokenizer = new natural.AggressiveTokenizerEs();
+		const NGrams = natural.NGrams;
+		const tokens = tokenizer.tokenize(input);
+		const ngrams = NGrams.ngrams(tokens, this.gramType).map((grams) => grams.join(' '));
+		// generar conjuntos sobre el ngrama y los tokens que generan cada uno de ellos
+		const tokenSets: string[][] = ngrams.map((token, index) => [
+			token,
+			...tokens.slice(index, index + this.gramType),
+		]);
+		return tokenSets.map((set) => this.bestMatch(set.map(this.getSentiments))[1]);
+	}
 
 	private getSentiments(inputWord: string): [number, Sentiments.list] {
 		const sentimentsList: [
@@ -6610,28 +6630,30 @@ export class Sentiments {
 			this.JaroWinker(inputWord, word),
 			sentiments,
 		]);
-		return this.minDistance(sentimentsList);
+		return this.bestMatch(sentimentsList);
 	}
 	private JaroWinker(str1: string, str2: string): number {
-		return natural.JaroWinklerDistance(str1, str2);
+		const JWDistance = natural.JaroWinklerDistance(str1, str2);
+		// usar largo menor de ambos tokens como un ponderador, asi se prefiere matches de frases mas largas cuando se selecciona el mejor match
+		return JWDistance * Math.min(str1.length, str2.length);
 	}
 
-	private minDistance(values: [number, Sentiments.list][]): [number, Sentiments.list] {
+	private bestMatch(values: [number, Sentiments.list][]): [number, Sentiments.list] {
 		return values.reduce(
-			(minValue, currentValue) => (minValue[0] > currentValue[0] ? currentValue : minValue),
-			[0, undefined],
+			(maxValue, currentValue) => (maxValue[0] <= currentValue[0] ? currentValue : maxValue),
+			[-1, undefined],
 		);
 	}
-	constructor(private input: string) {}
-	calc(): Sentiments.list {
-		const tokenizer = new natural.AggressiveTokenizerEs();
-		const NGrams = natural.NGrams;
-		const tokens = tokenizer.tokenize(this.input);
-		const bigrams = NGrams.ngrams(tokens, this.gramType).map((gram) => gram.join(' '));
 
-		const tokenDistance = tokens.map((token) => token);
-
-		return { ...Sentiments.list, ...{ 'Autoconciencia Emocional': 0.1 } };
+	private concatSents(sents1: Sentiments.list, sents2: Sentiments.list): Sentiments.list {
+		// concatener sentimientos usando suma de factores
+		return Object.keys(Sentiments.list).reduce(
+			(currentValues, key: Sentiments.sentiment) => ({
+				...currentValues,
+				[key]: sents1[key] + sents2[key],
+			}),
+			Sentiments.list,
+		);
 	}
 }
 export namespace Sentiments {
