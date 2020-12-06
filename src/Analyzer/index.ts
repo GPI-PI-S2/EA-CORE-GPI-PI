@@ -1,35 +1,14 @@
-import { random } from 'ea-common-gpi-pi';
 import { fromString } from 'html-to-text';
 import LanguageDetect from 'languagedetect';
 import { DBController } from 'src/types/DBController';
 import { container } from 'tsyringe';
 import { Logger } from 'winston';
 import { Extractor } from '../services/Extractor';
+import { Sentiments } from './Sentiments';
 
-export class Analyzer {
+export class Anal {
 	private static version = '1.0';
-	private static newResult(): Analyzer.sentiments {
-		return {
-			'Autoconciencia Emocional': random(0, 100) / 100,
-			'Colaboración y Cooperación': random(0, 100) / 100,
-			'Comprensión Organizativa': random(0, 100) / 100,
-			'Conciencia Crítica': random(0, 100) / 100,
-			'Desarrollo de las relaciones': random(0, 100) / 100,
-			'Manejo de conflictos': random(0, 100) / 100,
-			'Motivación de logro': random(0, 100) / 100,
-			'Percepción y comprensión Emocional': random(0, 100) / 100,
-			'Relación Social': random(0, 100) / 100,
-			'Tolerancia a la frustración': random(0, 100) / 100,
-			Asertividad: random(0, 100) / 100,
-			Autoestima: random(0, 100) / 100,
-			Empatía: random(0, 100) / 100,
-			Influencia: random(0, 100) / 100,
-			Liderazgo: random(0, 100) / 100,
-			Optimismo: random(0, 100) / 100,
-			Violencia: random(0, 100) / 100,
-		};
-	}
-	static htmlParse(input: Analyzer.input): Analyzer.input {
+	static htmlParse(input: Anal.input): Anal.input {
 		let content: string = input ? input.content : null;
 		if (!content) return { content };
 		content = content.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
@@ -53,7 +32,7 @@ export class Analyzer {
 
 		return { content };
 	}
-	static filter(input: Analyzer.input, filters: Partial<Analyzer.Filter> = {}): boolean {
+	static filter(input: Anal.input, filters: Partial<Anal.Filter> = {}): boolean {
 		const { empty, lang, minSentenceSize, assurance } = {
 			...{ empty: false, lang: 'es', minSentenceSize: 2, assurance: 0.3 },
 			...filters,
@@ -70,19 +49,16 @@ export class Analyzer {
 	}
 	constructor(private readonly extractor: Extractor) {}
 	private readonly logger = container.resolve<Logger>('logger');
-	async analyze(
-		input: Analyzer.input[],
-		options: Analyzer.Analyze.Options,
-	): Promise<Analyzer.Analysis> {
+	async analyze(input: Anal.input[], options: Anal.Analyze.Options): Promise<Anal.Analysis> {
 		const { metaKey } = options;
 		const extractor = this.extractor.register.id;
 		const isDBCAvailable = container.isRegistered<DBController>('DBController');
 		const result = input.map((input) => ({
 			input,
-			sentiments: Analyzer.newResult(),
+			sentiments: new Sentiments(input.content).calc(),
 		}));
-		const response: Analyzer.Analysis = {
-			modelVersion: Analyzer.version,
+		const response: Anal.Analysis = {
+			modelVersion: Anal.version,
 			extractor,
 			metaKey,
 			result,
@@ -100,27 +76,7 @@ export class Analyzer {
 		return response;
 	}
 }
-export namespace Analyzer {
-	export type sentiment =
-		| 'Asertividad'
-		| 'Autoconciencia Emocional'
-		| 'Autoestima'
-		| 'Colaboración y Cooperación'
-		| 'Comprensión Organizativa'
-		| 'Conciencia Crítica'
-		| 'Desarrollo de las relaciones'
-		| 'Empatía'
-		| 'Influencia'
-		| 'Liderazgo'
-		| 'Manejo de conflictos'
-		| 'Motivación de logro'
-		| 'Optimismo'
-		| 'Percepción y comprensión Emocional'
-		| 'Relación Social'
-		| 'Tolerancia a la frustración'
-		| 'Violencia';
-	export type sentiments = { [key in sentiment]: number };
-
+export namespace Anal {
 	export type input = {
 		content: string;
 	};
@@ -136,7 +92,7 @@ export namespace Analyzer {
 		modelVersion: string;
 		result: {
 			input: input;
-			sentiments: sentiments;
+			sentiments: Sentiments.list;
 		}[];
 	}
 	export namespace Analyze {

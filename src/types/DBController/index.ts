@@ -1,4 +1,5 @@
-import { Analyzer } from 'src/Analyzer';
+import { Anal } from 'src/Analyzer';
+import { Sentiments } from 'src/Analyzer/Sentiments';
 import { DBAnalysis } from './Analysis';
 import { DBEntry } from './Entry';
 export * from './Analysis';
@@ -10,7 +11,7 @@ export abstract class DBController {
 	abstract disconnect(): Promise<void>;
 	abstract calc(metaKey: string): Promise<DBController.calcResult>;
 	abstract stats(): Promise<{ [key: string]: number }>;
-	abstract insert(analysis: Analyzer.Analysis, force: boolean): Promise<void>;
+	abstract insert(analysis: Anal.Analysis, force: boolean): Promise<void>;
 	abstract bulkDB(dbPath: string): Promise<DBController.bulkDBResult>;
 }
 export namespace DBController {
@@ -36,6 +37,6 @@ export namespace DBController {
 	}
 	export interface calcResult {
 		total: number;
-		sentiments: Analyzer.sentiments;
+		sentiments: Sentiments.list;
 	}
 }

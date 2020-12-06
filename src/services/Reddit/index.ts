@@ -2,7 +2,7 @@ import Axios, { AxiosInstance } from 'axios';
 import Joi from 'joi';
 import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
-import { Analyzer } from '../../Analyzer';
+import { Anal } from '../../Analyzer';
 import { Extractor } from '../Extractor';
 import { Response } from '../Extractor/Response';
 
@@ -24,8 +24,8 @@ export class Reddit extends Extractor {
 		comments: Reddit.Post<Reddit.Comment>,
 		counter: number,
 		limit: number,
-		aContent: Analyzer.input[],
-	): Analyzer.input[] {
+		aContent: Anal.input[],
+	): Anal.input[] {
 		if (!comments) return aContent;
 		const childrens = comments.data.children;
 		const childLength = childrens.length;
@@ -66,7 +66,7 @@ export class Reddit extends Extractor {
 		return new Response(this, Response.Status.OK);
 	}
 
-	async obtain(options: Reddit.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
+	async obtain(options: Reddit.Obtain.Options): Promise<Response<Anal.Analysis>> {
 		// oauth Reddit 0XGi1M9cPjNx1oAmjp51n0PLPlaSPg
 		const { limit, minSentenceSize, subReddit, postId } = options;
 		const subRedditParam = subReddit ? `/r/${subReddit}` : '';
@@ -93,18 +93,16 @@ export class Reddit extends Extractor {
 			const data = response.data;
 			const comments = this.getComments(data[1], 0, limit, []);
 			const filtered = comments
-				.map((message) => Analyzer.htmlParse(message))
-				.filter((message) =>
-					Analyzer.filter(message, { minSentenceSize, assurance: 0.26 }),
-				);
+				.map((message) => Anal.htmlParse(message))
+				.filter((message) => Anal.filter(message, { minSentenceSize, assurance: 0.26 }));
 
 			this.logger.silly(`length: ${filtered.length}`);
-			const analyzer = new Analyzer(this);
-			const analysis = await analyzer.analyze(filtered, { metaKey });
-			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
+			const anal = new Anal(this);
+			const analysis = await anal.analyze(filtered, { metaKey });
+			return new Response<Anal.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
 			this.logger.debug(`OBTAIN error ${this.register.id} v${this.register.version}`, error);
-			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR, null, error);
+			return new Response<Anal.Analysis>(this, Response.Status.ERROR, null, error);
 		}
 	}
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
