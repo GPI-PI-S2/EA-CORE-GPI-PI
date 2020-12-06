@@ -2,15 +2,15 @@ export class Sentiments {
 	private static list: Sentiments.list = {
 		'autoconciencia emocional': 0,
 		'autocontrol emocional': 0,
-		'colaboracion cooperacion': 0,
-		'comprension organizativa': 0,
+		'colaboración y cooperación': 0,
+		'comprensión organizativa': 0,
 		'comunicacion asertiva': 0,
 		'conciencia crítica': 0,
 		'desarrollar y estimular a los demás': 0,
 		'desarrollo de las relaciones': 0,
 		'manejo de conflictos': 0,
 		'motivación de logro': 0,
-		'percepcion comprension emocional': 0,
+		'percepción y comprensión emocional': 0,
 		'relación social': 0,
 		'tolerancia a la frustración': 0,
 		asertividad: 0,
@@ -38,15 +38,15 @@ export namespace Sentiments {
 		| 'liderazgo'
 		| 'optimismo'
 		| 'relación social'
-		| 'colaboracion cooperacion'
-		| 'comprension organizativa'
+		| 'colaboración y cooperación'
+		| 'comprensión organizativa'
 		| 'conciencia crítica'
 		| 'desarrollo de las relaciones'
 		| 'tolerancia a la frustración'
 		| 'comunicacion asertiva'
 		| 'manejo de conflictos'
 		| 'motivación de logro'
-		| 'percepcion comprension emocional'
+		| 'percepción y comprensión emocional'
 		| 'violencia';
 	export type list = { [key in sentiment]: number };
 }
