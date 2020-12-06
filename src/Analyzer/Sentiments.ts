@@ -6605,9 +6605,10 @@ export class Sentiments {
 	calc(): Sentiments.list {
 		const list = this.getBestFit(this.input);
 
-		return list.reduce(this.concatSents, Sentiments.list);
+		return list.reduce((sents1, sents2) => this.concatSents(sents1, sents2), Sentiments.list);
 	}
-	private readonly gramType = 2;
+
+	private gramType = 2;
 
 	private getBestFit(input: string): Sentiments.list[] {
 		const tokenizer = new natural.AggressiveTokenizerEs();
@@ -6619,7 +6620,9 @@ export class Sentiments {
 			token,
 			...tokens.slice(index, index + this.gramType),
 		]);
-		return tokenSets.map((set) => this.bestMatch(set.map(this.getSentiments))[1]);
+		return tokenSets.map(
+			(set) => this.bestMatch(set.map((word) => this.getSentiments(word)))[1],
+		);
 	}
 
 	private getSentiments(inputWord: string): [number, Sentiments.list] {
