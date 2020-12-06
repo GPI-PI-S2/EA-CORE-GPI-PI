@@ -1,7 +1,7 @@
 import { AxiosInstance, default as Axios } from 'axios';
 import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
-import { Analyzer } from '../../Analyzer';
+import { Anal } from '../../Analyzer';
 import { Extractor } from '../Extractor';
 import { Response } from '../Extractor/Response';
 
@@ -50,7 +50,7 @@ export class Emol extends Extractor {
 
 		return new Response(this, Response.Status.OK);
 	}
-	async obtain(options: Emol.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
+	async obtain(options: Emol.Obtain.Options): Promise<Response<Anal.Analysis>> {
 		this.logger.verbose(`OBTAIN ${this.register.id} v${this.register.version}`, options);
 		const validOptions = Extractor.obtainOptionsSchema.validate(options);
 		if (validOptions.error)
@@ -59,7 +59,7 @@ export class Emol extends Extractor {
 			} as never);
 
 		const { metaKey: url, limit, minSentenceSize } = options;
-		const analyzer = new Analyzer(this);
+		const anal = new Anal(this);
 		try {
 			const response = await this.api.get<Emol.Api.Data>('', {
 				params: {
@@ -67,7 +67,7 @@ export class Emol extends Extractor {
 					limit,
 				},
 			});
-			const comments: Analyzer.input[] = response.data.comments
+			const comments: Anal.input[] = response.data.comments
 				.filter((comment, index) => index < limit && comment.text !== '  ')
 				.map((comment) => {
 					const pComment = comment.text.replace(/(@.*\[\d*\]( )?)|&nbsp;*/g, '');
@@ -75,12 +75,12 @@ export class Emol extends Extractor {
 				});
 			// Hay que normalizar lo más posible los comentarios o no pasarán el filtro del Analyzer
 			const filtered = comments
-				.map((comment) => Analyzer.htmlParse(comment))
-				.filter((comment) => Analyzer.filter(comment, { minSentenceSize, assurance: 0.2 }));
+				.map((comment) => Anal.htmlParse(comment))
+				.filter((comment) => Anal.filter(comment, { minSentenceSize, assurance: 0.2 }));
 
 			this.logger.silly(`length: ${filtered.length}`);
-			const analysis = await analyzer.analyze(filtered, { metaKey: url });
-			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
+			const analysis = await anal.analyze(filtered, { metaKey: url });
+			return new Response<Anal.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
 			this.logger.silly('OBTAIN error', error);
 			return new Response(this, Response.Status.ERROR, null, error);

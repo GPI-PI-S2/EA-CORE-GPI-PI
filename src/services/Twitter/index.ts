@@ -3,7 +3,7 @@ import Joi from 'joi';
 import { inject, injectable } from 'tsyringe';
 import tweetParser from 'tweet-parser';
 import { Logger } from 'winston';
-import { Analyzer } from '../../Analyzer';
+import { Anal } from '../../Analyzer';
 import { Extractor } from '../Extractor';
 import { Response } from '../Extractor/Response';
 
@@ -84,7 +84,7 @@ export class Twitter extends Extractor {
 	 * @returns {Promise<Response<unknown>>}
 	 * @memberof Twitter
 	 */
-	async obtain(options: Twitter.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
+	async obtain(options: Twitter.Obtain.Options): Promise<Response<Anal.Analysis>> {
 		this.logger.verbose(`OBTAIN ${this.register.id} v${this.register.version}`, options);
 		const validOptions = Twitter.obtainOptionsSchema.validate(options);
 		if (validOptions.error)
@@ -93,7 +93,7 @@ export class Twitter extends Extractor {
 			} as never);
 
 		const { limit, metaKey, minSentenceSize } = options;
-		let filtered: Analyzer.input[] = [];
+		let filtered: Anal.input[] = [];
 		let tokenPage = '';
 		try {
 			while (tokenPage != undefined) {
@@ -107,7 +107,7 @@ export class Twitter extends Extractor {
 				const tweets = response.data.data;
 				filtered = filtered
 					.concat(tweets.map((tweet) => ({ content: Twitter.tweetParse(tweet) })))
-					.filter((content) => Analyzer.filter(content, { minSentenceSize }));
+					.filter((content) => Anal.filter(content, { minSentenceSize }));
 				tokenPage = response.data.meta.next_token;
 				this.logger.debug(`Tweets actualmente escaneados: ${filtered.length}`);
 				if (filtered.length > limit) {
@@ -118,12 +118,12 @@ export class Twitter extends Extractor {
 			if (resultLength > limit) filtered = filtered.slice(resultLength - limit);
 
 			this.logger.silly(`length: ${filtered.length}`);
-			const analyzer = new Analyzer(this);
-			const analysis = await analyzer.analyze(filtered, { metaKey });
-			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
+			const anal = new Anal(this);
+			const analysis = await anal.analyze(filtered, { metaKey });
+			return new Response<Anal.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
 			this.logger.debug(`OBTAIN error ${this.register.id} v${this.register.version}`, error);
-			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR, null, error);
+			return new Response<Anal.Analysis>(this, Response.Status.ERROR, null, error);
 		}
 	}
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars

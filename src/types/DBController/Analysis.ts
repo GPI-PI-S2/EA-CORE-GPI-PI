@@ -1,4 +1,4 @@
-import { Analyzer } from 'src/Analyzer';
+import { Sentiments } from 'src/Analyzer/Sentiments';
 import { DBController } from './';
 export abstract class DBAnalysis {
 	abstract create(
@@ -11,7 +11,7 @@ export abstract class DBAnalysis {
 }
 export namespace DBAnalysis {
 	export type Input = DBController.input<Analysis>;
-	export interface Analysis extends Analyzer.sentiments, DBController.Base {
+	export interface Analysis extends Sentiments.list, DBController.Base {
 		_entryId: DBController.id;
 		completionDate: string;
 		modelVersion: string;

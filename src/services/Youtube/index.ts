@@ -2,7 +2,7 @@ import Axios, { AxiosInstance } from 'axios';
 import Joi from 'joi';
 import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
-import { Analyzer } from '../../Analyzer';
+import { Anal } from '../../Analyzer';
 import { Extractor } from '../Extractor';
 import { Response } from '../Extractor/Response';
 @injectable()
@@ -45,7 +45,7 @@ export class Youtube extends Extractor {
 		});
 		return new Response(this, Response.Status.OK);
 	}
-	async obtain(options: Youtube.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
+	async obtain(options: Youtube.Obtain.Options): Promise<Response<Anal.Analysis>> {
 		this.logger.verbose(`OBTAIN ${this.register.id} v${this.register.version}`, options);
 
 		const validOptions = Youtube.obtainOptionsSchema.validate(options);
@@ -55,8 +55,8 @@ export class Youtube extends Extractor {
 			} as never);
 
 		const { metaKey, limit, minSentenceSize } = options;
-		let filtered: Analyzer.input[] = [];
-		const analyzer = new Analyzer(this);
+		let filtered: Anal.input[] = [];
+		const anal = new Anal(this);
 		//const subComents: string[] = [];
 		let tokenPage = '';
 		// Repeticiones para mas comentarios
@@ -75,12 +75,12 @@ export class Youtube extends Extractor {
 				filtered = filtered.concat(
 					response.data.items
 						.map((comment) =>
-							Analyzer.htmlParse({
+							Anal.htmlParse({
 								content: comment.snippet.topLevelComment.snippet.textDisplay,
 							}),
 						)
 						.filter((comment) =>
-							Analyzer.filter(comment, { minSentenceSize, assurance: 0.4 }),
+							Anal.filter(comment, { minSentenceSize, assurance: 0.4 }),
 						),
 				);
 				tokenPage = response.data.nextPageToken;
@@ -91,17 +91,17 @@ export class Youtube extends Extractor {
 			}
 
 			this.logger.silly(`length: ${filtered.length}`);
-			const analysis = await analyzer.analyze(filtered, { metaKey });
-			return new Response<Analyzer.Analysis>(this, Response.Status.OK, analysis);
+			const analysis = await anal.analyze(filtered, { metaKey });
+			return new Response<Anal.Analysis>(this, Response.Status.OK, analysis);
 		} catch (error) {
 			this.logger.debug(`OBTAIN error ${this.register.id} v${this.register.version}`, error);
-			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR, null, error);
+			return new Response<Anal.Analysis>(this, Response.Status.ERROR, null, error);
 		}
 	}
 	async unitaryObtain(options: Youtube.UnitaryObtain.Options): Promise<Response<unknown>> {
 		const { metaKey, apiKey, limitComment } = options;
-		const comments: Analyzer.input[] = [];
-		const analyzer = new Analyzer(this);
+		const comments: Anal.input[] = [];
+		const anal = new Anal(this);
 		this.logger.verbose('UNITARY OBTAIN', options);
 		try {
 			const response = await this.api.get<Youtube.Comments>('comments', {
@@ -141,15 +141,15 @@ export class Youtube extends Extractor {
 				}
 			}
 			/* Parseando los datos a la estructura del analyzer */
-			const message: Analyzer.input[] = comments.map((eachComment) => ({
+			const message: Anal.input[] = comments.map((eachComment) => ({
 				content: eachComment.content,
 			}));
-			const analysis = await analyzer.analyze(message, { metaKey });
+			const analysis = await anal.analyze(message, { metaKey });
 			this.logger.silly(message);
 			return new Response(this, Response.Status.OK, analysis);
 		} catch (error) {
 			this.logger.debug('UNITARY OBTAIN', error);
-			return new Response<Analyzer.Analysis>(this, Response.Status.ERROR, null, error);
+			return new Response<Anal.Analysis>(this, Response.Status.ERROR, null, error);
 		}
 	}
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars

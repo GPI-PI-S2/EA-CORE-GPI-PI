@@ -2,7 +2,7 @@ import { CError } from 'ea-common-gpi-pi';
 import Joi from 'joi';
 import { inject, injectable } from 'tsyringe';
 import { Logger } from 'winston';
-import { Analyzer } from '../../Analyzer';
+import { Anal } from '../../Analyzer';
 import { Extractor } from '../Extractor';
 import { Response } from '../Extractor/Response';
 import { Api } from './Api';
@@ -155,7 +155,7 @@ export class Telegram extends Extractor {
 			return new Response(this, Response.Status.ERROR, null, error);
 		}
 	}
-	async obtain(options: Telegram.Obtain.Options): Promise<Response<Analyzer.Analysis>> {
+	async obtain(options: Telegram.Obtain.Options): Promise<Response<Anal.Analysis>> {
 		this.logger.verbose(`OBTAIN ${this.register.id} v${this.register.version}`, options);
 
 		const validOptions = Telegram.obtainOptionsSchema.validate(options);
@@ -168,15 +168,15 @@ export class Telegram extends Extractor {
 			const peer = Telegram.parsePeer(options);
 			const response = await this.api.getHistory({ peer, limit: options.limit, max_id: 0 });
 			//const lastId: number = response.messages.length > 0 ? response.messages[0].id : null;
-			const RMessages: Analyzer.input[] = response.messages.map((m) => ({
+			const RMessages: Anal.input[] = response.messages.map((m) => ({
 				content: m.message,
 			}));
 			const filteredMessages = RMessages.filter((message) =>
-				Analyzer.filter(message, { minSentenceSize }),
+				Anal.filter(message, { minSentenceSize }),
 			);
 			this.logger.silly(`length: ${filteredMessages.length}`);
-			const analyzer = new Analyzer(this);
-			const analysis = await analyzer.analyze(filteredMessages, { metaKey });
+			const anal = new Anal(this);
+			const analysis = await anal.analyze(filteredMessages, { metaKey });
 			return new Response(this, Response.Status.OK, analysis);
 		} catch (error) {
 			this.logger.silly('OBTAIN error', error);

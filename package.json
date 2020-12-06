@@ -1,6 +1,6 @@
 {
 	"name": "ea-core-gpi-pi",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"types": "dist/index.d.ts",
 	"main": "dist/index.js",
 	"description": "Extrae contenido de diferentes fuentes y analiza según el modelo <nombre>",
