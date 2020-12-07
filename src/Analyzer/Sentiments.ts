@@ -6669,9 +6669,11 @@ export class Sentiments {
 	};
 	constructor(private input: string) {}
 	calc(): Sentiments.list {
+		const tokenizer = new natural.AggressiveTokenizerEs();
+		const tokens = tokenizer.tokenize(this.input.toLowerCase());
 		// sentiments analysis
 		// optional, use stemming to improve? word match
-		const list = this.getBestFit(this.input);
+		const list = this.getBestFit(tokens);
 		const sentiments = list.reduce(
 			(sents1, sents2) => this.concatSents(sents1, sents2, (a, b) => a + b),
 			Sentiments.list,
@@ -6688,7 +6690,8 @@ export class Sentiments {
 				: sentiments;
 
 		// AFINN analysis
-		const polarity = this.afinn(this.input);
+		const polarity = this.afinn(tokens);
+		console.log(polarity);
 		return polarity >= 0
 			? this.concatSents(
 					sentimentsUpperCaseFactor,
@@ -6704,11 +6707,8 @@ export class Sentiments {
 
 	private gramType = 2;
 
-	private getBestFit(input: string): Sentiments.list[] {
-		const tokenizer = new natural.AggressiveTokenizerEs();
-		const NGrams = natural.NGrams;
-		const tokens = tokenizer.tokenize(input.toLowerCase());
-		const ngrams = NGrams.ngrams(tokens, this.gramType);
+	private getBestFit(tokens: string[]): Sentiments.list[] {
+		const ngrams = natural.NGrams.ngrams(tokens, this.gramType);
 		// generate sets over the tokens so that each token is associated with the resulting nGram (used for multi word matches)
 		const tokenSets: string[][] = ngrams.map((tokensNGram) => [
 			...tokensNGram,
@@ -6756,14 +6756,13 @@ export class Sentiments {
 			Sentiments.list,
 		);
 	}
-	private afinn(input: string) {
+	private afinn(tokens: string[]) {
 		const polarityAnalizer = new natural.SentimentAnalyzer(
 			'Spanish',
 			natural.PorterStemmerEs,
 			'afinn',
 		);
-		const tokenizer = new natural.AggressiveTokenizerEs();
-		return polarityAnalizer.getSentiment(tokenizer.tokenize(input));
+		return polarityAnalizer.getSentiment(tokens);
 	}
 }
 export namespace Sentiments {
