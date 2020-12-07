@@ -6691,7 +6691,6 @@ export class Sentiments {
 
 		// AFINN analysis
 		const polarity = this.afinn(tokens);
-		console.log(polarity);
 		return polarity >= 0
 			? this.concatSents(
 					sentimentsUpperCaseFactor,
