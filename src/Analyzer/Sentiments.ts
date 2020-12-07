@@ -6711,7 +6711,7 @@ export class Sentiments {
 		// generate sets over the tokens so that each token is associated with the resulting nGram (used for multi word matches)
 		const tokenSets: string[][] = ngrams.map((tokensNGram) => [
 			...tokensNGram,
-			tokensNGram.join(', '),
+			tokensNGram.join(' '),
 		]);
 		return tokenSets.map(
 			(set) => this.bestMatch(set.map((word) => this.getSentiments(word)))[1],
@@ -6731,7 +6731,7 @@ export class Sentiments {
 	private JaroWinker(str1: string, str2: string): number {
 		const JWDistance = natural.JaroWinklerDistance(str1, str2);
 		// using the string lenght as a factor the algorithm prefers long matches over short ones (used when multiple matches give similar values)
-		return JWDistance * Math.min(str1.length, str2.length);
+		return JWDistance * Math.sqrt(Math.min(str1.length, str2.length));
 	}
 
 	private bestMatch(values: [number, Sentiments.list][]): [number, Sentiments.list] {
