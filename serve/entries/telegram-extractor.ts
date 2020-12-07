@@ -89,8 +89,8 @@ export default async (extractor: Telegram) => {
 	});
 	/* 	logger.debug('result get:', result.get());
 	 */ const file = new File('telegram.json');
-	const data = result.data.result.map((content) => content.input.content);
-	const total = data.length;
-	await file.write({ data, total });
+	/* 	const data = result.data.result.map((content) => content.input.content);
+	const total = data.length; */
+	await file.write(result.data.result as any);
 	logger.info('response ok');
 };

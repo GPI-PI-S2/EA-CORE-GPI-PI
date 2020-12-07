@@ -15,7 +15,7 @@ export default async (extractor: Twitter) => {
 		return;
 	}
 	let hashtag = '';
-	let limit = 100;
+	let limit = 1000;
 	while (!hashtag) {
 		hashtag = await Readline.read('Para buscar ingrese un término');
 	}
@@ -25,8 +25,8 @@ export default async (extractor: Twitter) => {
 		return;
 	}
 	const file = new File('twitter.json');
-	const data = result.data.result.map((content) => content.input.content);
-	const total = data.length;
-	await file.write({ data, total });
+	/* 	const data = result.data.result.map((content) => content.input.content);
+	const total = data.length; */
+	await file.write(result.data.result as any);
 	logger.info('response ok');
 };

@@ -30,8 +30,9 @@ export default async (extractor: Emol) => {
 		return;
 	}
 	const file = new File('emol.json');
-	const data = result.data.result.map((content) => content.input.content);
+	/* 	const data = result.data.result.map((content) => content.input.content);
 	const total = data.length;
-	await file.write({ data, total });
+	 */
+	await file.write(result.data.result as any);
 	logger.info('response ok');
 };
