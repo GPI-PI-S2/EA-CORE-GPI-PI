@@ -6601,11 +6601,105 @@ export class Sentiments {
 		},
 	];
 
+	static positivePolarity: Sentiments.list = {
+		asertividad: 1,
+		'autoconciencia emocional': 1,
+		autoestima: 1,
+		'desarrollar y estimular a los demás': 1,
+		empatía: 1.2,
+		'autocontrol emocional': 1,
+		influencia: 1,
+		liderazgo: 1,
+		optimismo: 1.2,
+		'relación social': 1,
+		'colaboración y cooperación': 1,
+		'comprensión organizativa': 1,
+		'conciencia crítica': 1,
+		'desarrollo de las relaciones': 1,
+		'tolerancia a la frustración': 1,
+		'comunicacion asertiva': 1,
+		'manejo de conflictos': 1,
+		'motivación de logro': 1.2,
+		'percepción y comprensión emocional': 1,
+		violencia: 0.4,
+	};
+	static negativePolarity: Sentiments.list = {
+		asertividad: 0.8,
+		'autoconciencia emocional': 0.8,
+		autoestima: 0.5,
+		'desarrollar y estimular a los demás': 1,
+		empatía: 0.3,
+		'autocontrol emocional': 1,
+		influencia: 0.8,
+		liderazgo: 0.5,
+		optimismo: 0.3,
+		'relación social': 0.5,
+		'colaboración y cooperación': 0.5,
+		'comprensión organizativa': 0.5,
+		'conciencia crítica': 0.8,
+		'desarrollo de las relaciones': 0.5,
+		'tolerancia a la frustración': 0.5,
+		'comunicacion asertiva': 1,
+		'manejo de conflictos': 0.5,
+		'motivación de logro': 0.3,
+		'percepción y comprensión emocional': 0.5,
+		violencia: 1,
+	};
+	static upperCaseSentiments: Sentiments.list = {
+		asertividad: 1,
+		'autoconciencia emocional': 1,
+		autoestima: 1,
+		'desarrollar y estimular a los demás': 1,
+		empatía: 1,
+		'autocontrol emocional': 1,
+		influencia: 1.3,
+		liderazgo: 1,
+		optimismo: 1,
+		'relación social': 1,
+		'colaboración y cooperación': 1,
+		'comprensión organizativa': 1,
+		'conciencia crítica': 1,
+		'desarrollo de las relaciones': 1,
+		'tolerancia a la frustración': 1,
+		'comunicacion asertiva': 1,
+		'manejo de conflictos': 1,
+		'motivación de logro': 1,
+		'percepción y comprensión emocional': 1,
+		violencia: 2,
+	};
 	constructor(private input: string) {}
 	calc(): Sentiments.list {
+		// sentiments analysis
+		// optional, use stemming to improve? word match
 		const list = this.getBestFit(this.input);
+		const sentiments = list.reduce(
+			(sents1, sents2) => this.concatSents(sents1, sents2, (a, b) => a + b),
+			Sentiments.list,
+		);
 
-		return list.reduce((sents1, sents2) => this.concatSents(sents1, sents2), Sentiments.list);
+		const inputChars = this.input.split('');
+		const upperCaseTotal =
+			inputChars.filter((letter) => letter === letter.toUpperCase()).length /
+			inputChars.length;
+
+		const sentimentsUpperCaseFactor =
+			upperCaseTotal >= 0.8
+				? this.concatSents(sentiments, Sentiments.upperCaseSentiments, (a, b) => a * b)
+				: sentiments;
+
+		// AFINN analysis
+		const polarity = this.afinn(this.input);
+		return polarity >= 0
+			? this.concatSents(
+					sentimentsUpperCaseFactor,
+					Sentiments.positivePolarity,
+					(a, b) => a * (1 + polarity * b),
+			  )
+			: this.concatSents(
+					sentimentsUpperCaseFactor,
+					Sentiments.negativePolarity,
+					(a, b) => a * (1 - polarity * b),
+			  );
 	}
 
 	private gramType = 2;
@@ -6613,12 +6707,12 @@ export class Sentiments {
 	private getBestFit(input: string): Sentiments.list[] {
 		const tokenizer = new natural.AggressiveTokenizerEs();
 		const NGrams = natural.NGrams;
-		const tokens = tokenizer.tokenize(input);
-		const ngrams = NGrams.ngrams(tokens, this.gramType).map((grams) => grams.join(' '));
-		// generar conjuntos sobre el ngrama y los tokens que generan cada uno de ellos
-		const tokenSets: string[][] = ngrams.map((token, index) => [
-			token,
-			...tokens.slice(index, index + this.gramType),
+		const tokens = tokenizer.tokenize(input.toLowerCase());
+		const ngrams = NGrams.ngrams(tokens, this.gramType);
+		// generate sets over the tokens so that each token is associated with the resulting nGram (used for multi word matches)
+		const tokenSets: string[][] = ngrams.map((tokensNGram) => [
+			...tokensNGram,
+			tokensNGram.join(', '),
 		]);
 		return tokenSets.map(
 			(set) => this.bestMatch(set.map((word) => this.getSentiments(word)))[1],
@@ -6637,7 +6731,7 @@ export class Sentiments {
 	}
 	private JaroWinker(str1: string, str2: string): number {
 		const JWDistance = natural.JaroWinklerDistance(str1, str2);
-		// usar largo menor de ambos tokens como un ponderador, asi se prefiere matches de frases mas largas cuando se selecciona el mejor match
+		// using the string lenght as a factor the algorithm prefers long matches over short ones (used when multiple matches give similar values)
 		return JWDistance * Math.min(str1.length, str2.length);
 	}
 
@@ -6648,15 +6742,28 @@ export class Sentiments {
 		);
 	}
 
-	private concatSents(sents1: Sentiments.list, sents2: Sentiments.list): Sentiments.list {
-		// concatener sentimientos usando suma de factores
+	private concatSents(
+		sents1: Sentiments.list,
+		sents2: Sentiments.list,
+		combineFunction: (a: number, b: number) => number,
+	): Sentiments.list {
+		// concat sentiments using per factor provided function
 		return Object.keys(Sentiments.list).reduce(
 			(currentValues, key: Sentiments.sentiment) => ({
 				...currentValues,
-				[key]: sents1[key] + sents2[key],
+				[key]: combineFunction(sents1[key], sents2[key]),
 			}),
 			Sentiments.list,
 		);
+	}
+	private afinn(input: string) {
+		const polarityAnalizer = new natural.SentimentAnalyzer(
+			'Spanish',
+			natural.PorterStemmerEs,
+			'afinn',
+		);
+		const tokenizer = new natural.AggressiveTokenizerEs();
+		return polarityAnalizer.getSentiment(tokenizer.tokenize(input));
 	}
 }
 export namespace Sentiments {
