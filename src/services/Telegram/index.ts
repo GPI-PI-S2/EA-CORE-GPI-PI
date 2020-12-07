@@ -164,14 +164,18 @@ export class Telegram extends Extractor {
 				optionsError: validOptions.error ? validOptions.error.message : undefined,
 			} as never);
 		try {
-			const { minSentenceSize, metaKey } = options;
+			const { minSentenceSize, limit, metaKey } = options;
 			const peer = Telegram.parsePeer(options);
-			const response = await this.api.getHistory({ peer, limit: options.limit, max_id: 0 });
-			//const lastId: number = response.messages.length > 0 ? response.messages[0].id : null;
-			const RMessages: Anal.input[] = response.messages.map((m) => ({
-				content: m.message,
-			}));
-			const filteredMessages = RMessages.filter((message) =>
+			let max_id = 0;
+			const messages: Anal.input[] = [];
+			do {
+				const response = await this.api.getHistory({ peer, limit, max_id: 0 });
+				response.messages.forEach((message) => messages.push({ content: message.message }));
+				max_id = response.messages.length > 0 ? response.messages[0].id : null;
+				this.logger.info(`Mensajes actualmente escaneados: ${messages.length}`);
+			} while (max_id !== null && messages.length <= limit);
+
+			const filteredMessages = messages.filter((message) =>
 				Anal.filter(message, { minSentenceSize }),
 			);
 			this.logger.silly(`length: ${filteredMessages.length}`);

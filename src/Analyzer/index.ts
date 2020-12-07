@@ -7,7 +7,7 @@ import { Extractor } from '../services/Extractor';
 import { Sentiments } from './Sentiments';
 
 export class Anal {
-	private static version = '1.0';
+	private static version = Sentiments.version;
 	static htmlParse(input: Anal.input): Anal.input {
 		let content: string = input ? input.content : null;
 		if (!content) return { content };

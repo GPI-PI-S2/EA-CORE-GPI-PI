@@ -15,15 +15,14 @@ export default async (extractor: Reddit) => {
 		limit: 1000,
 		minSentenceSize: 3,
 	});
-	/* 	logger.debug('result get:', result.get());
-	 */
+	//logger.debug('result get:', result.get());
 	if (result.isError) {
 		logger.error('obtain error', result.data);
 		return;
 	}
-	const data = result.data.result.map((content) => content.input.content);
-	const total = data.length;
+	/* const data = result.data.result.map((content) => content.input.content);
+	const total = data.length; */
 	const file = new File('reddit.json');
-	await file.write({ data, total });
+	await file.write(result.data.result as any);
 	logger.info('response ok');
 };

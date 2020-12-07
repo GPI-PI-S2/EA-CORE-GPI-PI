@@ -41,8 +41,8 @@ export default async (extractor: Youtube) => {
 		return;
 	}
 	const file = new File('youtube.json');
-	const data = result.data.result.map((content) => content.input.content);
-	const total = data.length;
-	await file.write({ data, total });
+	/* 	const data = result.data.result.map((content) => content.input.content);
+	const total = data.length; */
+	await file.write(result.data.result as any);
 	logger.info('response ok');
 };
