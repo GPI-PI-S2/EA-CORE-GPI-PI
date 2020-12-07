@@ -4,9 +4,11 @@ export class Sentiments {
 	static readonly version = data.version;
 	constructor(private input: string) {}
 	calc(): Sentiments.list {
+		const tokenizer = new natural.AggressiveTokenizerEs();
+		const tokens = tokenizer.tokenize(this.input.toLowerCase());
 		// sentiments analysis
 		// optional, use stemming to improve? word match
-		const list = this.getBestFit(this.input);
+		const list = this.getBestFit(tokens);
 		const sentiments = list.reduce(
 			(sents1, sents2) => this.concatSents(sents1, sents2, (a, b) => a + b),
 			data.list,
@@ -23,7 +25,7 @@ export class Sentiments {
 				: sentiments;
 
 		// AFINN analysis
-		const polarity = this.afinn(this.input);
+		const polarity = this.afinn(tokens);
 		return polarity >= 0
 			? this.concatSents(
 					sentimentsUpperCaseFactor,
@@ -39,15 +41,12 @@ export class Sentiments {
 
 	private gramType = 2;
 
-	private getBestFit(input: string): Sentiments.list[] {
-		const tokenizer = new natural.AggressiveTokenizerEs();
-		const NGrams = natural.NGrams;
-		const tokens = tokenizer.tokenize(input.toLowerCase());
-		const ngrams = NGrams.ngrams(tokens, this.gramType);
+	private getBestFit(tokens: string[]): Sentiments.list[] {
+		const ngrams = natural.NGrams.ngrams(tokens, this.gramType);
 		// generate sets over the tokens so that each token is associated with the resulting nGram (used for multi word matches)
 		const tokenSets: string[][] = ngrams.map((tokensNGram) => [
 			...tokensNGram,
-			tokensNGram.join(', '),
+			tokensNGram.join(' '),
 		]);
 		return tokenSets.map(
 			(set) => this.bestMatch(set.map((word) => this.getSentiments(word)))[1],
@@ -67,7 +66,7 @@ export class Sentiments {
 	private JaroWinker(str1: string, str2: string): number {
 		const JWDistance = natural.JaroWinklerDistance(str1, str2);
 		// using the string lenght as a factor the algorithm prefers long matches over short ones (used when multiple matches give similar values)
-		return JWDistance * Math.min(str1.length, str2.length);
+		return JWDistance * Math.sqrt(Math.min(str1.length, str2.length));
 	}
 
 	private bestMatch(values: [number, Sentiments.list][]): [number, Sentiments.list] {
@@ -91,14 +90,13 @@ export class Sentiments {
 			data.list,
 		);
 	}
-	private afinn(input: string) {
+	private afinn(tokens: string[]) {
 		const polarityAnalizer = new natural.SentimentAnalyzer(
 			'Spanish',
 			natural.PorterStemmerEs,
 			'afinn',
 		);
-		const tokenizer = new natural.AggressiveTokenizerEs();
-		return polarityAnalizer.getSentiment(tokenizer.tokenize(input));
+		return polarityAnalizer.getSentiment(tokens);
 	}
 }
 export namespace Sentiments {
