@@ -40,6 +40,7 @@ export class Sentiments {
 	}
 
 	private gramType = 2;
+	private distanceFilter = 0.75;
 
 	private getBestFit(tokens: string[]): Sentiments.list[] {
 		const ngrams = natural.NGrams.ngrams(tokens, this.gramType);
@@ -66,13 +67,17 @@ export class Sentiments {
 	private JaroWinker(str1: string, str2: string): number {
 		const JWDistance = natural.JaroWinklerDistance(str1, str2);
 		// using the string lenght as a factor the algorithm prefers long matches over short ones (used when multiple matches give similar values)
-		return JWDistance * Math.sqrt(Math.min(str1.length, str2.length));
+		// consider only close matches to avoid false positives
+		return JWDistance >= this.distanceFilter
+			? JWDistance * Math.sqrt(Math.min(str1.length, str2.length))
+			: 0;
 	}
 
 	private bestMatch(values: [number, Sentiments.list][]): [number, Sentiments.list] {
+		// if all the values are zero returns the default sentiments
 		return values.reduce(
-			(maxValue, currentValue) => (maxValue[0] <= currentValue[0] ? currentValue : maxValue),
-			[-1, undefined],
+			(maxValue, currentValue) => (maxValue[0] < currentValue[0] ? currentValue : maxValue),
+			[0, data.list],
 		);
 	}
 
