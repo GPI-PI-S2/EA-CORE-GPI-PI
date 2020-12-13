@@ -1,7 +1,7 @@
-export * from './ieom2';
 export * from './negativePolarity';
 export * from './positivePolarity';
 export * from './upperCase';
+export * from './wordValues';
 export const version = '1.0.0';
 export const list = {
 	asertividad: 0,

@@ -55,13 +55,9 @@ export class Sentiments {
 	}
 
 	private getSentiments(inputWord: string): [number, Sentiments.list] {
-		const sentimentsList: [
-			number,
-			Sentiments.list,
-		][] = data.ieom2.map(({ word, sentiments }) => [
-			this.JaroWinker(inputWord, word),
-			sentiments,
-		]);
+		const sentimentsList: [number, Sentiments.list][] = Object.entries(
+			data.wordValues,
+		).map((i) => [this.JaroWinker(inputWord, i[0]), i[1]]);
 		return this.bestMatch(sentimentsList);
 	}
 	private JaroWinker(str1: string, str2: string): number {

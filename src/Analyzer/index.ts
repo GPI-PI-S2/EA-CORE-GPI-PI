@@ -1,11 +1,12 @@
 import { fromString } from 'html-to-text';
 import LanguageDetect from 'languagedetect';
+import { Sentiments } from 'lib/ieom2/dist/Sentiments';
+import { list } from 'lib/ieom2/dist/v1';
+import Piscina from 'piscina';
 import { DBController } from 'src/types/DBController';
 import { container } from 'tsyringe';
 import { Logger } from 'winston';
 import { Extractor } from '../services/Extractor';
-import { Sentiments } from './Sentiments';
-
 export class Anal {
 	private static version = Sentiments.version;
 	static htmlParse(input: Anal.input): Anal.input {
@@ -53,10 +54,16 @@ export class Anal {
 		const { metaKey } = options;
 		const extractor = this.extractor.register.id;
 		const isDBCAvailable = container.isRegistered<DBController>('DBController');
-		const result = input.map((input) => ({
-			input,
-			sentiments: new Sentiments(input.content).calc(),
-		}));
+		const piscina = new Piscina({ filename: 'ea-core-ieom2-gpi-pi' });
+		const result = await Promise.all(
+			input.map(async (inp) => {
+				const sentiments = (await piscina.runTask(inp.content)) as list;
+				return {
+					input: inp,
+					sentiments,
+				};
+			}),
+		);
 		const response: Anal.Analysis = {
 			modelVersion: Anal.version,
 			extractor,

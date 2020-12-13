@@ -1,5 +1,5 @@
+import { Sentiments } from 'lib/ieom2/dist/Sentiments';
 import { Anal } from 'src/Analyzer';
-import { Sentiments } from 'src/Analyzer/Sentiments';
 import { DBAnalysis } from './Analysis';
 import { DBEntry } from './Entry';
 export * from './Analysis';
