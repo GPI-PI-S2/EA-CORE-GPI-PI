@@ -5,7 +5,7 @@
 	"main": "dist/index.js",
 	"description": "Extrae contenido de diferentes fuentes y analiza según el modelo <nombre>",
 	"scripts": {
-		"postinstall": "npm install-build-ieom2 && tsc --project ./",
+		"postinstall": "npm run build-ieom2 && tsc --project ./",
 		"build": "npm run build-ieom2 && tsc -p ./tsconfig.json",
 		"build-ieom2": "cd lib/ieom2 && npm run build",
 		"lint": "eslint . --ext .ts",
