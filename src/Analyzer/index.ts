@@ -1,7 +1,6 @@
+import { Sentiments } from 'ea-ieom2-gpi-pi/dist/Sentiments';
 import { fromString } from 'html-to-text';
 import LanguageDetect from 'languagedetect';
-import { Sentiments } from 'lib/ieom2/dist/Sentiments';
-import { list } from 'lib/ieom2/dist/v1';
 import Piscina from 'piscina';
 import { DBController } from 'src/types/DBController';
 import { container } from 'tsyringe';
@@ -54,10 +53,10 @@ export class Anal {
 		const { metaKey } = options;
 		const extractor = this.extractor.register.id;
 		const isDBCAvailable = container.isRegistered<DBController>('DBController');
-		const piscina = new Piscina({ filename: 'ea-core-ieom2-gpi-pi' });
+		const piscina = new Piscina({ filename: 'ea-ieom2-gpi-pi' });
 		const result = await Promise.all(
 			input.map(async (inp) => {
-				const sentiments = (await piscina.runTask(inp.content)) as list;
+				const sentiments = (await piscina.runTask(inp.content)) as Sentiments.list;
 				return {
 					input: inp,
 					sentiments,

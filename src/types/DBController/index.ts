@@ -1,7 +1,8 @@
-import { Sentiments } from 'lib/ieom2/dist/Sentiments';
+import { Sentiments } from 'ea-ieom2-gpi-pi/dist/Sentiments';
 import { Anal } from 'src/Analyzer';
 import { DBAnalysis } from './Analysis';
 import { DBEntry } from './Entry';
+
 export * from './Analysis';
 export * from './Entry';
 export abstract class DBController {
