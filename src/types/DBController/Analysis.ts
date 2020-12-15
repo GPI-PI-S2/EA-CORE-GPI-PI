@@ -1,4 +1,4 @@
-import { Sentiments } from 'src/Analyzer/Sentiments';
+import { Sentiments } from 'ea-ieom2-gpi-pi/dist/Sentiments';
 import { DBController } from './';
 export abstract class DBAnalysis {
 	abstract create(
