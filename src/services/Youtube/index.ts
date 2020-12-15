@@ -14,7 +14,7 @@ export class Youtube extends Extractor {
 		super({
 			id: 'youtube-extractor', // Identificador, solo letras minúsculas y guiones (az-)
 			name: 'Youtube', // Nombre legible para humanos
-			version: '1.0.0',
+			version: '2.0.0',
 		});
 	}
 	private api: AxiosInstance; // En caso de instanciar desde deploy remover readonly
@@ -41,7 +41,7 @@ export class Youtube extends Extractor {
 		this.api = Axios.create({
 			baseURL: 'https://www.googleapis.com/youtube/v3/', // Base URL,
 			responseType: 'json',
-			params: { key: apiKey, part: 'Snippet' },
+			params: { key: apiKey },
 		});
 		return new Response(this, Response.Status.OK);
 	}
@@ -57,11 +57,11 @@ export class Youtube extends Extractor {
 		const { metaKey, limit, minSentenceSize } = options;
 		let filtered: Anal.input[] = [];
 		const anal = new Anal(this);
-		//const subComents: string[] = [];
+		const parentsWithSubCommentsIds: string[] = [];
 		let tokenPage = '';
 		// Repeticiones para mas comentarios
 		try {
-			while (tokenPage != undefined) {
+			while (tokenPage != undefined && filtered.length < limit) {
 				this.logger.silly('pidiendo->', tokenPage);
 				const response = await this.api.get<Youtube.CommentThreads>('commentThreads', {
 					params: {
@@ -69,18 +69,31 @@ export class Youtube extends Extractor {
 						pageToken: tokenPage,
 						maxResults: limit > 100 ? 100 : limit,
 						textFormat: 'plainText',
+						part: 'snippet,replies',
 					},
 				});
 				this.logger.silly('recibido');
+				let tempList: Anal.input[] = [];
+				response.data.items.forEach((comment) => {
+					const content = comment.snippet.topLevelComment.snippet.textDisplay;
+					const totalRepliesCount = comment.snippet.totalReplyCount;
+					if (comment.replies) {
+						const replies = comment.replies.comments;
+						if (replies.length === totalRepliesCount) {
+							this.logger.debug(`Añadidas respuestas de ${comment.id}`);
+							tempList = tempList.concat(
+								replies.map((reply) => ({ content: reply.snippet.textDisplay })),
+							);
+						} else if (replies.length !== totalRepliesCount)
+							parentsWithSubCommentsIds.push(comment.id);
+					}
+					tempList.push({ content });
+				});
 				filtered = filtered.concat(
-					response.data.items
-						.map((comment) =>
-							Anal.htmlParse({
-								content: comment.snippet.topLevelComment.snippet.textDisplay,
-							}),
-						)
+					tempList
+						.map((content) => Anal.htmlParse(content))
 						.filter((comment) =>
-							Anal.filter(comment, { minSentenceSize, assurance: 0.4 }),
+							Anal.filter(comment, { minSentenceSize, assurance: 0.25 }),
 						),
 				);
 				tokenPage = response.data.nextPageToken;
@@ -89,7 +102,38 @@ export class Youtube extends Extractor {
 					break;
 				}
 			}
-
+			for (let x = 0; x < parentsWithSubCommentsIds.length && filtered.length < limit; x++) {
+				try {
+					let token = '';
+					const parentId = parentsWithSubCommentsIds[x];
+					while (token != undefined && filtered.length < limit) {
+						const response = await this.api.get<Youtube.Comments>('comments', {
+							params: {
+								id: parentId,
+								part: 'snippet',
+								maxResults: 100,
+							},
+						});
+						const comments = response.data.items.map((item) => ({
+							content: item.snippet.textDisplay,
+						}));
+						filtered = filtered.concat(
+							comments
+								.map((content) => Anal.htmlParse(content))
+								.filter((comment) =>
+									Anal.filter(comment, { minSentenceSize, assurance: 0.25 }),
+								),
+						);
+						token = response.data.nextPageToken;
+						this.logger.info(
+							`(Respuestas) Comentarios actualmente escaneados: ${filtered.length}`,
+						);
+					}
+				} catch (error) {
+					this.logger.error(error);
+				}
+			}
+			filtered = filtered.slice(0, limit);
 			this.logger.silly(`length: ${filtered.length}`);
 			const analysis = await anal.analyze(filtered, { metaKey });
 			return new Response<Anal.Analysis>(this, Response.Status.OK, analysis);

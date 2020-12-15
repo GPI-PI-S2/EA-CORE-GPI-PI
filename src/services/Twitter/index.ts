@@ -43,7 +43,7 @@ export class Twitter extends Extractor {
 		super({
 			id: 'twitter-extractor', // Identificador, solo letras minúsculas y guiones (az-)
 			name: 'Twitter', // Nombre legible para humanos
-			version: '1.0.0',
+			version: '2.0.0',
 		});
 	}
 	private api: AxiosInstance; // En caso de instanciar desde deploy remover readonly
@@ -109,7 +109,7 @@ export class Twitter extends Extractor {
 					.concat(tweets.map((tweet) => ({ content: Twitter.tweetParse(tweet) })))
 					.filter((content) => Anal.filter(content, { minSentenceSize }));
 				tokenPage = response.data.meta.next_token;
-				this.logger.debug(`Tweets actualmente escaneados: ${filtered.length}`);
+				this.logger.info(`Tweets actualmente escaneados: ${filtered.length}`);
 				if (filtered.length > limit) {
 					break;
 				}

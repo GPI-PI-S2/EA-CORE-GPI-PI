@@ -16,7 +16,7 @@ export class Reddit extends Extractor {
 		super({
 			id: 'reddit-extractor', // Identificador, solo letras minúsculas y guiones (az-)
 			name: 'Reddit', // Nombre legible para humanos
-			version: '1.0.0',
+			version: '2.0.0',
 		});
 	}
 	private api: AxiosInstance; // En caso de instanciar desde deploy remover readonly
@@ -27,10 +27,10 @@ export class Reddit extends Extractor {
 		aContent: Anal.input[],
 	): Anal.input[] {
 		if (!comments) return aContent;
-		const childrens = comments.data.children;
+		const childrens = comments.data.children.filter((c) => c.kind === 't1');
 		const childLength = childrens.length;
 		for (let x = 0; x < childLength; x++) {
-			const data = childrens[x].data;
+			const data = childrens[x].data as Reddit.Comment['data'];
 			const content = data.body_html;
 			const replies = data.replies;
 			aContent.push({ content });
@@ -89,13 +89,43 @@ export class Reddit extends Extractor {
 					params: { limit: limit, threaded: false },
 				},
 			);
+
+			const mores = response.data[1].data.children.filter(
+				(child) => child.kind === 'more',
+			) as Reddit.More[];
+			const pageId = `t3_${postId}`;
+			const pages = mores.map((child) => child.data.children).flat();
+			const pagesLength = pages.length;
 			this.logger.debug('Request status: ', { status: response.status });
 			const data = response.data;
 			const comments = this.getComments(data[1], 0, limit, []);
-			const filtered = comments
+			let filtered = comments
 				.map((message) => Anal.htmlParse(message))
 				.filter((message) => Anal.filter(message, { minSentenceSize, assurance: 0.26 }));
 
+			for (let x = 0; x <= pagesLength && filtered.length < limit; x++) {
+				try {
+					const response = await this.api.get<Reddit.CommentsMoreChildren>(
+						`/api/morechildren.json`,
+						{
+							params: { api_type: 'json', link_id: pageId, children: pages[x] },
+						},
+					);
+					const lComments = response.data.json.data.things;
+					const lFiltered = (lComments.map((c) => ({
+						content: c.data.body_html,
+					})) as Anal.input[])
+						.map((message) => Anal.htmlParse(message))
+						.filter((message) =>
+							Anal.filter(message, { minSentenceSize, assurance: 0.26 }),
+						);
+					filtered = filtered.concat(lFiltered);
+					this.logger.info(`Comentarios actualmente escaneados: ${filtered.length}`);
+				} catch (error) {
+					this.logger.error(error);
+				}
+			}
+			filtered = filtered.slice(0, limit);
 			this.logger.silly(`length: ${filtered.length}`);
 			const anal = new Anal(this);
 			const analysis = await anal.analyze(filtered, { metaKey });
@@ -115,11 +145,32 @@ export class Reddit extends Extractor {
 	}
 }
 export namespace Reddit {
-	type kind = 'Listing' | 't3' | 't2' | 't1';
+	type kind = 'Listing' | 't3' | 't2' | 't1' | 'more';
 	interface Structure<K extends kind, S> {
 		kind: K;
 		data: S;
 	}
+	interface MoreChildren<T extends Comment | Header> {
+		json: {
+			errors: unknown[];
+			data: {
+				things: T[];
+			};
+		};
+	}
+	export interface CommentsMoreChildren extends MoreChildren<Comment> {}
+	export interface More
+		extends Structure<
+			'more',
+			{
+				count: number;
+				name: string;
+				id: string;
+				parent_id: string;
+				depth: number;
+				children: string[];
+			}
+		> {}
 	export interface Header
 		extends Structure<
 			't3',
@@ -154,7 +205,7 @@ export namespace Reddit {
 			{
 				modhash: string;
 				dist: number;
-				children: C[];
+				children: (C extends Header ? Header : Comment | More)[];
 				after: unknown;
 				before: unknown;
 			}

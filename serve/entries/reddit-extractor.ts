@@ -1,6 +1,5 @@
 import { Reddit } from '../../src/services/Reddit';
 import logger from '../loaders/logger';
-import { File } from '../tools/File';
 
 export default async (extractor: Reddit) => {
 	logger.info(`Serving extractor`);
@@ -9,7 +8,7 @@ export default async (extractor: Reddit) => {
 	await extractor.deploy();
 
 	const result = await extractor.obtain({
-		postId: 'jmlgaw',
+		postId: 'k8dir1',
 		subReddit: 'chile',
 		metaKey: 'jmlgaw',
 		limit: 1000,
@@ -20,9 +19,9 @@ export default async (extractor: Reddit) => {
 		logger.error('obtain error', result.data);
 		return;
 	}
-	/* const data = result.data.result.map((content) => content.input.content);
-	const total = data.length; */
-	const file = new File('reddit.json');
-	await file.write(result.data.result as any);
+	const data = result.data.result.map((content) => content.input.content);
+	const total = data.length;
+	/* const file = new File('reddit.json');
+	await file.write(result.data.result as any); */
 	logger.info('response ok');
 };
