@@ -102,7 +102,13 @@ export class Youtube extends Extractor {
 					break;
 				}
 			}
-			for (let x = 0; x < parentsWithSubCommentsIds.length && filtered.length < limit; x++) {
+			for (
+				let x = 0;
+				parentsWithSubCommentsIds.length > 0 &&
+				x < parentsWithSubCommentsIds.length &&
+				filtered.length < limit;
+				x++
+			) {
 				try {
 					let token = '';
 					const parentId = parentsWithSubCommentsIds[x];
