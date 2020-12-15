@@ -1,4 +1,4 @@
-import { Sentiments } from 'ea-ieom2-gpi-pi/dist/Sentiments';
+import { list } from 'ea-ieom2-gpi-pi/dist/barrer';
 import { DBController } from './';
 export abstract class DBAnalysis {
 	abstract create(
@@ -11,7 +11,7 @@ export abstract class DBAnalysis {
 }
 export namespace DBAnalysis {
 	export type Input = DBController.input<Analysis>;
-	export interface Analysis extends Sentiments.list, DBController.Base {
+	export interface Analysis extends list, DBController.Base {
 		_entryId: DBController.id;
 		completionDate: string;
 		modelVersion: string;

@@ -1,4 +1,4 @@
-import { Sentiments } from 'ea-ieom2-gpi-pi/dist/Sentiments';
+import { list } from 'ea-ieom2-gpi-pi/dist/barrer';
 import { Anal } from 'src/Analyzer';
 import { DBAnalysis } from './Analysis';
 import { DBEntry } from './Entry';
@@ -38,6 +38,6 @@ export namespace DBController {
 	}
 	export interface calcResult {
 		total: number;
-		sentiments: Sentiments.list;
+		sentiments: list;
 	}
 }
