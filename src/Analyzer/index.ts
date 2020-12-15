@@ -1,4 +1,4 @@
-import { Sentiments } from 'ea-ieom2-gpi-pi/dist/Sentiments';
+import { list, Sentiments } from 'ea-ieom2-gpi-pi/dist/barrer';
 import { fromString } from 'html-to-text';
 import LanguageDetect from 'languagedetect';
 import Piscina from 'piscina';
@@ -56,7 +56,7 @@ export class Anal {
 		const piscina = new Piscina({ filename: 'ea-ieom2-gpi-pi' });
 		const result = await Promise.all(
 			input.map(async (inp) => {
-				const sentiments = (await piscina.runTask(inp.content)) as Sentiments.list;
+				const sentiments = (await piscina.runTask(inp.content)) as list;
 				return {
 					input: inp,
 					sentiments,
@@ -98,7 +98,7 @@ export namespace Anal {
 		modelVersion: string;
 		result: {
 			input: input;
-			sentiments: Sentiments.list;
+			sentiments: list;
 		}[];
 	}
 	export namespace Analyze {
