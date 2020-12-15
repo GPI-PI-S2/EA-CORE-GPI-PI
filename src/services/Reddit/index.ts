@@ -102,8 +102,7 @@ export class Reddit extends Extractor {
 			let filtered = comments
 				.map((message) => Anal.htmlParse(message))
 				.filter((message) => Anal.filter(message, { minSentenceSize, assurance: 0.26 }));
-
-			for (let x = 0; x <= pagesLength && filtered.length < limit; x++) {
+			for (let x = 0; pagesLength > 0 && x <= pagesLength && filtered.length < limit; x++) {
 				try {
 					const response = await this.api.get<Reddit.CommentsMoreChildren>(
 						`/api/morechildren.json`,

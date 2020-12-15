@@ -8,7 +8,7 @@ export default async (extractor: Reddit) => {
 	await extractor.deploy();
 
 	const result = await extractor.obtain({
-		postId: 'k8dir1',
+		postId: 'kd05iq',
 		subReddit: 'chile',
 		metaKey: 'jmlgaw',
 		limit: 1000,
