@@ -110,6 +110,7 @@ export class Reddit extends Extractor {
 							params: { api_type: 'json', link_id: pageId, children: pages[x] },
 						},
 					);
+					if (!response.data || !response.data.json.data) break;
 					const lComments = response.data.json.data.things;
 					const lFiltered = (lComments.map((c) => ({
 						content: c.data.body_html,
