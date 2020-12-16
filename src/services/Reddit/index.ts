@@ -101,7 +101,7 @@ export class Reddit extends Extractor {
 			const comments = this.getComments(data[1], 0, limit, []);
 			let filtered = comments
 				.map((message) => Anal.htmlParse(message))
-				.filter((message) => Anal.filter(message, { minSentenceSize, assurance: 0.26 }));
+				.filter((message) => Anal.filter(message, { minSentenceSize, assurance: 0.2 }));
 			for (let x = 0; pagesLength > 0 && x <= pagesLength && filtered.length < limit; x++) {
 				try {
 					const response = await this.api.get<Reddit.CommentsMoreChildren>(
@@ -117,7 +117,7 @@ export class Reddit extends Extractor {
 					})) as Anal.input[])
 						.map((message) => Anal.htmlParse(message))
 						.filter((message) =>
-							Anal.filter(message, { minSentenceSize, assurance: 0.26 }),
+							Anal.filter(message, { minSentenceSize, assurance: 0.2 }),
 						);
 					filtered = filtered.concat(lFiltered);
 					this.logger.info(`Comentarios actualmente escaneados: ${filtered.length}`);

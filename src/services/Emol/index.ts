@@ -76,7 +76,7 @@ export class Emol extends Extractor {
 			// Hay que normalizar lo más posible los comentarios o no pasarán el filtro del Analyzer
 			const filtered = comments
 				.map((comment) => Anal.htmlParse(comment))
-				.filter((comment) => Anal.filter(comment, { minSentenceSize, assurance: 0.2 }));
+				.filter((comment) => Anal.filter(comment, { minSentenceSize, assurance: 0.1 }));
 
 			this.logger.silly(`length: ${filtered.length}`);
 			const analysis = await anal.analyze(filtered, { metaKey: url });
