@@ -54,6 +54,7 @@ export class Anal {
 		const extractor = this.extractor.register.id;
 		const isDBCAvailable = container.isRegistered<DBController>('DBController');
 		const piscina = new Piscina({ filename: 'ea-ieom2-gpi-pi' });
+		this.logger.info('Iniciando análisis...');
 		const result = await Promise.all(
 			input.map(async (inp) => {
 				const sentiments = (await piscina.runTask(inp.content)) as list;
