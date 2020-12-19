@@ -10,7 +10,10 @@ export abstract class DBController {
 	abstract readonly $analysis: DBAnalysis;
 	abstract connect(): Promise<void>;
 	abstract disconnect(): Promise<void>;
-	abstract calc(metaKey: string): Promise<DBController.calcResult>;
+	abstract calc(options: {
+		extractor: string;
+		metaKey: string;
+	}): Promise<DBController.calcResult>;
 	abstract stats(): Promise<{ [key: string]: number }>;
 	abstract insert(analysis: Anal.Analysis, force: boolean): Promise<void>;
 	abstract bulkDB(dbPath: string): Promise<DBController.bulkDBResult>;
